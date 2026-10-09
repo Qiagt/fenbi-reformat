@@ -28,7 +28,7 @@ import {
     return;
   }
   if (!payload) { document.body.textContent = '预览数据已过期'; return; }
-  chrome.storage.local.remove(id).catch(() => {});
+  chrome.storage.local.remove(id).catch(() => { });
 
   document.title = payload.title + ' - 预览';
 
@@ -37,6 +37,12 @@ import {
   document.head.appendChild(styleEl);
 
   document.body.innerHTML = payload.bodyHTML;
+
+  // 打印按钮
+  const printBtn = document.getElementById('fb-print-btn');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => window.print());
+  }
 
   await loadConfig();
   const config = getConfig();

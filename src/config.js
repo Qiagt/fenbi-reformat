@@ -22,7 +22,7 @@ export function defaultSettings() {
     chapterNameFont: 'SimHei',
     chapterNameSize: 16,
     chapterNameMarginBottom: 5,
-    chapterDescFont: 'SimSun',
+    chapterDescFont: 'SimHei',
     chapterDescSize: 12,
     chapterDescMarginBottom: 10,
 

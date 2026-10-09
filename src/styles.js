@@ -371,10 +371,30 @@ img.fb-img-selected {
 
 @media print {
   html, body { background: #fff; margin: 0; padding: 0; }
-  .fb-toolbar { display: none !important; }
+
+  /* 隐藏所有 UI：打印按钮、侧栏、拖拽把手 */
+  .fb-toolbar,
+  .fb-sidebar,
+  .fb-sidebar-handle {
+    display: none !important;
+  }
+
+  /* 输出区去掉侧栏让出的右边距 */
+  body.fb-sidebar-open #fb-output,
+  #fb-output {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
   #fb-staging { display: none !important; }
-  #fb-output { padding: 0; display: block; }
-  .fb-page { margin: 0; box-shadow: none; page-break-after: always; break-after: page; }
+
+  .fb-page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+    break-after: page;
+  }
   .fb-page:last-child { page-break-after: auto; break-after: auto; }
 }
 `;
