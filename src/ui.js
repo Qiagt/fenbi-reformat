@@ -205,11 +205,12 @@ const PANEL_CSS = `
 .fb-panel details > *:not(summary):first-of-type { margin-top: 8px; }
 .fb-panel details > *:last-child { margin-bottom: 8px; }
 `;
-
+const _version = chrome.runtime.getManifest().version;
 const PANEL_HTML = `
 <div id="fb-pdf-panel" class="fb-panel">
   <div class="fb-panel-header" id="fb-panel-drag">
-    <span>粉笔试卷导出</span>
+    <span>Fenbi-ReFormator v${_version}版，免费开源\n</span>
+    <span>作者：小红书@YuZhongpro</span>
     <span class="fb-panel-minimize" id="fb-panel-minimize">—</span>
   </div>
   <div class="fb-panel-tabs">
