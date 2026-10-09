@@ -1,28 +1,37 @@
 // ============================================================
-// 主入口
+// 主入口：组装所有模块
+// 职责：
+//   1. 加载配置与自定义字体
+//   2. 注入 UI 面板
+//   3. 绑定"生成"按钮 → 调起预览
+//   4. 顶层错误兜底
 // ============================================================
 
 import { loadConfig, getConfig } from './config.js';
 import { loadAllFonts, getCustomFonts } from './fonts.js';
 import { injectPanel } from './ui.js';
-import { buildPreviewPayload } from './pagination.js';
+import { openPreview } from './pagination.js';
 
 export async function main() {
+  // 防重复注入（如页面内被反复执行 content script）
   if (window.__fbPdfInjected__) return;
   window.__fbPdfInjected__ = true;
 
   try {
+    // 1. 并行加载配置与字体（两者互不依赖）
     await Promise.all([loadConfig(), loadAllFonts()]);
 
     const config = getConfig();
     const customFonts = getCustomFonts();
 
-    injectPanel({
+    // 2. 注入悬浮面板，并拿到面板里的主要交互句柄
+    const panel = injectPanel({
       config,
       customFonts,
       onGenerate: handleGenerate,
     });
 
+    // 3. 生成按钮的统一入口
     function handleGenerate(jsonText) {
       let jsonData;
       try {
@@ -32,24 +41,15 @@ export async function main() {
         return;
       }
 
-      let payload;
       try {
-        payload = buildPreviewPayload(jsonData, { config, customFonts });
-      } catch (err) {
-        console.error('[fenbi-pdf] 生成预览数据失败：', err);
-        alert('生成预览失败：' + err.message);
-        return;
-      }
-
-      const id = 'fb-preview-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-      chrome.storage.local.set({ [id]: payload })
-        .then(() => {
-          const url = chrome.runtime.getURL('src/preview.html') + '?id=' + encodeURIComponent(id);
-          window.open(url, '_blank');
-        })
-        .catch((e) => {
-          alert('写入预览数据失败：' + e.message);
+        openPreview(jsonData, {
+          config,
+          customFonts,
         });
+      } catch (err) {
+        console.error('[fenbi-pdf] 生成预览失败：', err);
+        alert('生成预览失败：' + err.message);
+      }
     }
 
     console.log('[fenbi-pdf] 已就绪');

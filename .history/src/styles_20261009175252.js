@@ -1,5 +1,7 @@
 // ============================================================
 // 预览页 CSS 生成
+// - buildCSS(settings, pageSize, pageSizes)
+// - 依赖 fonts.js 的 buildFontFaces / fontFamilyString
 // ============================================================
 
 import { buildFontFaces, fontFamilyString } from './fonts.js';
@@ -11,16 +13,19 @@ export function buildCSS(settings, pageSize, pageSizes) {
 
   const isB5 = pageSize === 'B5';
 
+  // 装订线绝对坐标（mm）
   const lineXMm     = 15;
   const sealTextXMm = isB5 ? 10 : 8;
   const sealNameYMm = isB5 ? 62.5 : 74.25;
   const sealIdYMm   = isB5 ? 167.5 : 132.75;
 
+  // 相对内容区
   const sealLineX = lineXMm - settings.marginLeft;
   const sealTextX = sealTextXMm - settings.marginLeft;
   const sealNameY = sealNameYMm - settings.marginTop;
   const sealIdY   = sealIdYMm - settings.marginTop;
 
+  // 封面主体在 [装订线, 纸张右页边] 盒子里居中：左移 (marginLeft - 15) / 2
   const coverShiftMm = ((lineXMm - settings.marginLeft) / 2).toFixed(2);
 
   const sealFontSize      = isB5 ? 11 : 13;
@@ -31,12 +36,14 @@ export function buildCSS(settings, pageSize, pageSizes) {
   const noticeTitleSize   = isB5 ? 22 : 26;
   const noticeBodySize    = isB5 ? 10 : 12;
 
+  // 装订标签旋转前的总宽度（文字宽 + 间距 + 3cm 下划线）→ 用于定位旋转后的中心
   const sealNameWidthMm = (2 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
   const sealIdWidthMm   = (4 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
 
   return `
 ${fontFaces}
 
+/* ============ 打印纸张定义 ============ */
 @page {
   size: ${sz.width}mm ${sz.height}mm;
   margin: 0;
@@ -164,13 +171,7 @@ html, body {
   text-underline-offset: auto;
   text-decoration-skip-ink: none;
   white-space: pre;
-  margin: 0 2px;
-}
-
-/* 图片选中高亮 */
-img.fb-img-selected {
-  outline: 1px solid #dc2626;
-  outline-offset: 2px;
+  margin: 0;
 }
 
 /* ============ 封面 ============ */
@@ -189,6 +190,7 @@ img.fb-img-selected {
   --paper-h: ${sz.height}mm;
 }
 
+/* 装订虚线：纵贯整张纸 */
 .fb-seal-line {
   position: absolute;
   left: var(--seal-line-x);
@@ -198,6 +200,7 @@ img.fb-img-selected {
   border-left: 0.5pt dashed #000;
 }
 
+/* 装订标签：文字 + 下划线在基线上并排，整块逆时针旋转 90° 躺倒 */
 .fb-seal-item {
   position: absolute;
   left: var(--seal-text-x);
@@ -212,7 +215,9 @@ img.fb-img-selected {
 .fb-seal-name { top: calc(var(--seal-name-y) + var(--seal-name-width) / 2); }
 .fb-seal-id   { top: calc(var(--seal-id-y)   + var(--seal-id-width) / 2); }
 
-.fb-seal-label { display: inline; }
+.fb-seal-label {
+  display: inline;
+}
 
 .fb-seal-under {
   display: inline-block;
@@ -223,6 +228,7 @@ img.fb-img-selected {
   margin-left: 0.4em;
 }
 
+/* ============ 封面主体 ============ */
 .fb-cover-body {
   display: flex;
   flex-direction: column;

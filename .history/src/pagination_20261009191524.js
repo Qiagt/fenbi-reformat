@@ -1,5 +1,7 @@
 // ============================================================
 // 预览数据构造
+// - buildPreviewPayload(jsonData, deps) → 返回 { title, css, bodyHTML, settings, page, bodyFF }
+// - main.js 拿到后写 storage，打开 preview.html
 // ============================================================
 
 import { buildCSS } from './styles.js';
@@ -8,7 +10,7 @@ import { buildBlocks, toChineseNum } from './parser.js';
 import { buildOverrideCSS } from './image-overrides.js';
 
 export function buildPreviewPayload(jsonData, deps) {
-  const { config } = deps;
+  const { config, customFonts } = deps;
   const pageSize = config.activePageSize;
   const sz = config.pageSizes[pageSize];
   const settings = config.settings[pageSize];
@@ -54,7 +56,6 @@ export function buildPreviewPayload(jsonData, deps) {
     title: jsonData.exam && jsonData.exam.name ? jsonData.exam.name : '试卷',
     css,
     bodyHTML,
-    blocksHTML,
     settings,
     page: { width: sz.width, height: sz.height },
     bodyFF,

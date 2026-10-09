@@ -16,10 +16,10 @@
       "run_at": "document_idle"
     }
   ],
-     "web_accessible_resources": [
+    "web_accessible_resources": [
     {
       "resources": ["src/*", "static/*"],
-      "matches": ["https://*.fenbi.com/*", "chrome-extension://*/*"]
+      "matches": ["https://*.fenbi.com/*"]
     }
   ]
 }
