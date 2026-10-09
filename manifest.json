@@ -3,7 +3,14 @@
   "name": "Fenbi-refomator 粉笔重排插件",
   "version": "1.0.0",
   "description": "解析粉笔题目，生成标准排版的试卷并导出 PDF",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "128": "static/icon.png"
+  },
+  "author": "YuZhongpro",
+  "homepage_url": "https://github.com/qiagt/fenbi-reformat",
   "host_permissions": [
     "https://*.fenbi.com/*",
     "https://*.fbstatic.cn/*",
@@ -11,15 +18,25 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://*.fenbi.com/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://*.fenbi.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-     "web_accessible_resources": [
+  "web_accessible_resources": [
     {
-      "resources": ["src/*", "static/*"],
-      "matches": ["https://*.fenbi.com/*", "chrome-extension://*/*"]
+      "resources": [
+        "src/*",
+        "static/*"
+      ],
+      "matches": [
+        "https://*.fenbi.com/*",
+        "chrome-extension://*/*"
+      ]
     }
   ]
 }
