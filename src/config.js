@@ -7,12 +7,12 @@ const CONFIG_KEY = 'fb-pdf-config';
 export function defaultSettings() {
   return {
     // ---- 题目 ----
-    bodyFont: 'SimSun',
+    bodyFont: 'FangSong_GB2312',
     bodyFontSize: 12,
     bodyLineHeight: 1.5,
     paraSpacing: 0,
     stemOptionGap: 5,
-    questionGap: 10,
+    questionGap: 25,
     keepQuestionTogether: false,
 
     // ---- 模块 ----
@@ -20,7 +20,7 @@ export function defaultSettings() {
     chapterShowPartIndex: false,
     chapterCenterAlign: true,
     chapterNameFont: 'SimHei',
-    chapterNameSize: 12,
+    chapterNameSize: 16,
     chapterNameMarginBottom: 5,
     chapterDescFont: 'SimSun',
     chapterDescSize: 12,
