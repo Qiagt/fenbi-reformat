@@ -38,7 +38,7 @@ export function buildPreviewPayload(jsonData, deps) {
 
   const bodyHTML = `
     <div class="fb-toolbar">
-      <button onclick="window.print()">导出 PDF / 打印</button>
+      <button id="fb-print-btn" type="button">导出 PDF</button>
     </div>
     <div id="fb-measure" style="position:absolute;visibility:hidden;left:-99999px;top:0;
          width:${sz.width - settings.marginLeft - settings.marginRight}mm;
