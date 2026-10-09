@@ -1,18 +1,17 @@
 // ============================================================
 // 悬浮面板 UI
 // - injectPanel({ config, onGenerate })
-// - 面板 HTML/CSS 注入、tab 切换、折叠、拖拽
+// - 面板 HTML/CSS 注入、tab 切换、折叠
 // - 设置表单生成与事件绑定（配置修改、字体上传、导入导出）
-// - "重新排版本试卷"按钮 → 回调 onGenerate(jsonText)
+// - "生成试卷预览"按钮 → 回调 onGenerate(jsonText)
 // ============================================================
 
 import { saveConfig, defaultConfig, deepMerge } from './config.js';
 import { getAllFontOptions, saveCustomFont, readFontFile } from './fonts.js';
 import { extractFromPage } from './extractor.js';
-
 const PANEL_CSS = `
 .fb-panel {
-  position: fixed; top: 20px; right: 20px; width: 380px;
+  position: fixed; top: 20px; left: 20px; width: 380px;
   background: #fff; border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.18);
   z-index: 999999;
@@ -20,12 +19,10 @@ const PANEL_CSS = `
   overflow: hidden; display: flex; flex-direction: column;
   max-height: calc(100vh - 40px);
 }
-.fb-panel.dragging { cursor: move; }
 .fb-panel-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 15px; background: #4f46e5; color: #fff;
   font-size: 14px; font-weight: bold;
-  cursor: move; user-select: none;
 }
 .fb-panel-minimize {
   cursor: pointer; font-size: 18px; line-height: 1; user-select: none;
@@ -51,7 +48,7 @@ const PANEL_CSS = `
 #fb-generate-btn, .fb-settings-actions button {
   width: 100%; padding: 8px 12px;
   background: #4f46e5; color: #fff; border: none; border-radius: 4px;
-  cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 0;
+  cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 10px;
 }
 #fb-generate-btn:hover, .fb-settings-actions button:hover { background: #4338ca; }
 .fb-settings-actions {
@@ -97,7 +94,7 @@ const PANEL_CSS = `
 
 const PANEL_HTML = `
 <div id="fb-pdf-panel" class="fb-panel">
-  <div class="fb-panel-header" id="fb-panel-drag">
+  <div class="fb-panel-header">
     <span>📄 粉笔试卷导出</span>
     <span class="fb-panel-minimize" id="fb-panel-minimize">—</span>
   </div>
@@ -106,8 +103,12 @@ const PANEL_HTML = `
     <div class="fb-tab" data-tab="settings">设置</div>
   </div>
   <div class="fb-panel-body">
-    <div class="fb-tab-content active" data-content="input">
+      <div class="fb-tab-content active" data-content="input">
       <button id="fb-generate-btn">重新排版本试卷</button>
+      <p style="font-size:12px;color:#6b7280;margin:10px 0 0 0;line-height:1.5;">
+        点击后从当前页面提取题目并生成预览。<br>
+        若提取不到内容，请确认已打开粉笔做题页。
+      </p>
     </div>
     <div class="fb-tab-content" data-content="settings">
       <div class="fb-settings-scroll" id="fb-settings-scroll"></div>
@@ -141,56 +142,7 @@ export function injectPanel(opts) {
 
   const panel = document.getElementById('fb-pdf-panel');
 
-  // 3. 拖拽
-  (function setupDrag() {
-    const dragHandle = document.getElementById('fb-panel-drag');
-    let dragging = false;
-    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-
-    dragHandle.addEventListener('mousedown', (e) => {
-      if (e.target.id === 'fb-panel-minimize') return;
-      e.preventDefault();
-
-      const rect = panel.getBoundingClientRect();
-      // 把 right 定位切换成 left 定位，方便拖拽计算
-      panel.style.left = rect.left + 'px';
-      panel.style.top = rect.top + 'px';
-      panel.style.right = 'auto';
-
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      startLeft = rect.left;
-      startTop = rect.top;
-
-      panel.classList.add('dragging');
-      document.body.style.userSelect = 'none';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!dragging) return;
-      let newLeft = startLeft + (e.clientX - startX);
-      let newTop = startTop + (e.clientY - startY);
-
-      const rect = panel.getBoundingClientRect();
-      const maxLeft = window.innerWidth - rect.width;
-      const maxTop = window.innerHeight - rect.height;
-      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-      newTop = Math.max(0, Math.min(newTop, maxTop));
-
-      panel.style.left = newLeft + 'px';
-      panel.style.top = newTop + 'px';
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (!dragging) return;
-      dragging = false;
-      panel.classList.remove('dragging');
-      document.body.style.userSelect = '';
-    });
-  })();
-
-  // 4. 折叠
+  // 3. 折叠
   let isMinimized = false;
   document.getElementById('fb-panel-minimize').addEventListener('click', () => {
     isMinimized = !isMinimized;
@@ -198,7 +150,7 @@ export function injectPanel(opts) {
     document.getElementById('fb-panel-minimize').textContent = isMinimized ? '+' : '—';
   });
 
-  // 5. tab 切换
+  // 4. tab 切换
   document.querySelectorAll('.fb-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fb-tab').forEach((t) => t.classList.remove('active'));
@@ -211,7 +163,7 @@ export function injectPanel(opts) {
     });
   });
 
-  // 6. 设置表单
+  // 5. 设置表单
   const settingsScroll = document.getElementById('fb-settings-scroll');
 
   function buildSettingsForm() {
@@ -292,6 +244,7 @@ export function injectPanel(opts) {
       </details>
     `;
 
+    // 回填值
     settingsScroll.querySelectorAll('[data-cfg]').forEach((el) => {
       const k = el.dataset.cfg;
       if (k === 'activePageSize') {
@@ -303,7 +256,7 @@ export function injectPanel(opts) {
     });
   }
 
-  // 7. 表单变更
+  // 6. 表单变更
   settingsScroll.addEventListener('change', async (e) => {
     const el = e.target;
     const k = el.dataset.cfg;
@@ -326,7 +279,7 @@ export function injectPanel(opts) {
     await saveConfig();
   });
 
-  // 8. 字体上传
+  // 7. 字体上传
   settingsScroll.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-upload-font]');
     if (!btn) return;
@@ -350,8 +303,9 @@ export function injectPanel(opts) {
     };
     inp.click();
   });
+  // 7.5 从页面提取
 
-  // 9. 生成按钮
+    // 生成按钮：从当前页面提取 + 直接生成
   document.getElementById('fb-generate-btn').addEventListener('click', () => {
     let data;
     try {
@@ -369,7 +323,7 @@ export function injectPanel(opts) {
     onGenerate(JSON.stringify(data));
   });
 
-  // 10. 导出配置
+  // 9. 导出配置
   document.getElementById('fb-export-config').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -380,7 +334,7 @@ export function injectPanel(opts) {
     URL.revokeObjectURL(url);
   });
 
-  // 11. 导入配置
+  // 10. 导入配置
   document.getElementById('fb-import-config').addEventListener('click', () => {
     const inp = document.createElement('input');
     inp.type = 'file';
@@ -399,6 +353,7 @@ export function injectPanel(opts) {
       if (mode === 'cancel') return;
 
       const newCfg = deepMerge(defaultConfig(), imported);
+      // 保持 config 引用稳定：清空旧对象后把新值拷进去
       for (const k in config) delete config[k];
       Object.assign(config, newCfg);
 
@@ -409,6 +364,7 @@ export function injectPanel(opts) {
     inp.click();
   });
 
+  // 初始化表单
   buildSettingsForm();
 
   return {

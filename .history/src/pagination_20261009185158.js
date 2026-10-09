@@ -142,7 +142,7 @@ function buildCoverHTML(jsonData) {
       </ol>
       <div class="fb-cover-footer">
         <div>本试卷由 fenbi-reformator 插件生成</div>
-        <div>题目版权归属为粉笔公司</div>
+        <div>版权归属为粉笔公司，请勿侵权</div>
       </div>
           </div>
   </div>`;

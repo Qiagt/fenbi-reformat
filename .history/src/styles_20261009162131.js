@@ -171,7 +171,7 @@ html, body {
   text-underline-offset: auto;
   text-decoration-skip-ink: none;
   white-space: pre;
-  margin: 0;
+  margin: 0 2px;
 }
 
 /* ============ 封面 ============ */

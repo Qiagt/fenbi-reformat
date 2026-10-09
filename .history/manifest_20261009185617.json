@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Fenbi-refomator 粉笔重排插件",
+  "name": "粉笔重pai",
   "version": "1.0.0",
-  "description": "解析粉笔题目，生成标准排版的试卷并导出 PDF",
+  "description": "解析粉笔 JSON，生成标准排版的试卷并导出 PDF",
   "permissions": ["storage"],
   "host_permissions": [
     "https://*.fenbi.com/*",

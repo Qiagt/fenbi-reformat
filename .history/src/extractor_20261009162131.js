@@ -35,7 +35,7 @@ function inlineOf(node) {
       return;
     }
     if (tag === 'u') {
-      raw.push('#blank');
+      raw.push('#blank ');
       return;
     }
     if (tag === 'br') {
