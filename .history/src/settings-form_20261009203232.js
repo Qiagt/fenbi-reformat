@@ -1,5 +1,6 @@
 // ============================================================
 // 设置表单（共享模块）
+// 分组：题目 / 模块与材料 / 偏好设置
 // ============================================================
 
 export function buildSettingsFormHTML(fontOptions, config) {
@@ -78,20 +79,6 @@ export function buildSettingsFormHTML(fontOptions, config) {
       </div>
 
       <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="circleNumBlock">圆圈序号段落独立成块</label></div>
-
-      <details>
-        <summary>行内图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgInlineOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgInlineStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgInlineMaterialMinHeight" min="0" max="20" step="0.1"></div>
-      </details>
-
-      <details>
-        <summary>独立图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgStandaloneOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgStandaloneStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgStandaloneMaterialMinHeight" min="0" max="20" step="0.1"></div>
-      </details>
     </details>
   `;
 }

@@ -34,12 +34,10 @@ export function buildCSS(settings, pageSize, pageSizes) {
   const sealNameWidthMm = (2 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
   const sealIdWidthMm   = (4 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
 
-  const imgInlineOptionMH   = settings.imgInlineOptionMinHeight   != null ? settings.imgInlineOptionMinHeight   : 0.5;
-  const imgInlineStemMH     = settings.imgInlineStemMinHeight     != null ? settings.imgInlineStemMinHeight     : 1;
-  const imgInlineMaterialMH = settings.imgInlineMaterialMinHeight != null ? settings.imgInlineMaterialMinHeight : 4;
-  const imgStandaloneOptionMH   = settings.imgStandaloneOptionMinHeight   != null ? settings.imgStandaloneOptionMinHeight   : 2;
-  const imgStandaloneStemMH     = settings.imgStandaloneStemMinHeight     != null ? settings.imgStandaloneStemMinHeight     : 4;
-  const imgStandaloneMaterialMH = settings.imgStandaloneMaterialMinHeight != null ? settings.imgStandaloneMaterialMinHeight : 4;
+  const imgInlineMH = settings.imgInlineMinHeight || 0;
+  const imgStandaloneMH = settings.imgStandaloneMinHeight || 0;
+  const imgMatStandaloneMH = settings.imgMaterialStandaloneMinHeight || 0;
+  const imgMatInlineMH = settings.imgMaterialInlineMinHeight || 0;
 
   return `
 ${fontFaces}
@@ -177,14 +175,13 @@ html, body {
 .fb-option-content { flex: 1; min-width: 0; text-align: left; word-break: break-word; }
 
 /* ============ 图片 ============ */
-/* 独立图 */
 .fb-img-standalone-stem {
   max-height: 4cm;
   width: auto;
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneStemMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-option {
   max-height: 2cm;
@@ -193,7 +190,7 @@ html, body {
   display: block;
   margin: 5px 0;
   object-fit: contain;
-  min-height: ${imgStandaloneOptionMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-material {
   max-height: 4cm;
@@ -201,181 +198,21 @@ html, body {
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneMaterialMH}cm;
+  ${imgMatStandaloneMH > 0 ? `min-height: ${imgMatStandaloneMH}cm;` : ''}
 }
-
-/* 行内图 */
 .fb-img-inline {
   max-height: 1cm;
   width: auto;
   vertical-align: middle;
   margin: 0 2px;
+  ${imgInlineMH > 0 ? `min-height: ${imgInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="stem"] {
-  min-height: ${imgInlineStemMH}cm;
+.fb-material .fb-img-inline {
+  max-height: 4cm;
+  ${imgMatInlineMH > 0 ? `min-height: ${imgMatInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="option"] {
-  min-height: ${imgInlineOptionMH}cm;
-}
-img.fb-img-inline[data-img-context="material"] {
-  min-height: ${imgInlineMaterialMH}cm;
-}
+
 .fb-blank {
   text-decoration: underline;
   text-underline-offset: auto;
-  text-decoration-skip-ink: none;
-  white-space: pre;
-  margin: 0;
-}
-
-img.fb-img-selected {
-  outline: 1px solid #dc2626;
-  outline-offset: 2px;
-}
-
-/* ============ 封面 ============ */
-.fb-cover {
-  position: relative;
-  width: 100%;
-  min-height: 100%;
-  font-family: ${ff('SimHei')};
-  --seal-line-x: ${sealLineX}mm;
-  --seal-text-x: ${sealTextX}mm;
-  --seal-name-y: ${sealNameY}mm;
-  --seal-id-y: ${sealIdY}mm;
-  --seal-name-width: ${sealNameWidthMm}mm;
-  --seal-id-width: ${sealIdWidthMm}mm;
-  --paper-margin-top: ${settings.marginTop}mm;
-  --paper-h: ${sz.height}mm;
-}
-
-.fb-seal-line {
-  position: absolute;
-  left: var(--seal-line-x);
-  top: calc(-1 * var(--paper-margin-top));
-  height: var(--paper-h);
-  width: 0;
-  border-left: 0.5pt dashed #000;
-}
-
-.fb-seal-item {
-  position: absolute;
-  left: var(--seal-text-x);
-  font-family: ${ff('SimHei')};
-  font-size: ${sealFontSize}pt;
-  color: #000;
-  white-space: nowrap;
-  line-height: 1;
-  transform-origin: top left;
-  transform: rotate(-90deg);
-}
-.fb-seal-name { top: calc(var(--seal-name-y) + var(--seal-name-width) / 2); }
-.fb-seal-id   { top: calc(var(--seal-id-y)   + var(--seal-id-width) / 2); }
-
-.fb-seal-label { display: inline; }
-
-.fb-seal-under {
-  display: inline-block;
-  width: 3cm;
-  height: 0;
-  border-top: 0.5pt solid #000;
-  vertical-align: baseline;
-  margin-left: 0.4em;
-}
-
-.fb-cover-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  transform: translateX(${coverShiftMm}mm);
-}
-.fb-cover-logo {
-  display: block;
-  width: 3cm;
-  height: 3cm;
-  object-fit: contain;
-  margin: 0 auto 0.6em auto;
-}
-.fb-cover-title {
-  text-align: center;
-  font-family: ${ff('SimHei')};
-  font-size: ${coverTitleSize}pt;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-.fb-cover-subject {
-  text-align: center;
-  font-family: ${ff('SimHei')};
-  font-size: ${coverSubjectSize}pt;
-  letter-spacing: 0.1em;
-  margin: 0.5em 0 0 0;
-}
-.fb-cover-tips-title {
-  font-family: ${ff('SimHei')};
-  font-size: ${coverTipTitleSize}pt;
-  margin-top: 3em;
-  margin-bottom: 1em;
-}
-.fb-cover-tips {
-  font-family: ${ff('FangSong')};
-  font-size: ${coverTipSize}pt;
-  line-height: 1.5;
-  padding-left: 1.5em;
-  margin: 0;
-  flex: 1;
-}
-.fb-cover-tips li { margin-bottom: 2em; }
-.fb-cover-footer {
-  text-align: center;
-  font-family: ${ff('SimHei')};
-  font-size: ${coverTipSize}pt;
-  margin-top: 3em;
-  padding-bottom: 1em;
-}
-
-/* ============ 注意事项 ============ */
-.fb-notice {
-  position: relative;
-  min-height: 100%;
-  font-family: ${ff('SimHei')};
-  display: flex;
-  flex-direction: column;
-}
-.fb-notice-title {
-  text-align: center;
-  font-family: ${ff('SimHei')};
-  font-size: ${noticeTitleSize}pt;
-  letter-spacing: 0.58em;
-  margin: 2em 0 2em 0;
-  font-weight: normal;
-}
-.fb-notice-rules {
-  font-family: ${ff('SimHei')};
-  font-size: ${noticeBodySize}pt;
-  line-height: 1.8;
-  padding-left: 1.5em;
-  margin: 0;
-  flex: 1;
-}
-.fb-notice-rules li { margin-bottom: 1.2em; }
-.fb-notice-warning {
-  font-family: ${ff('SimHei')};
-  width: 60%;
-  margin: 2em auto;
-  border: 1.5pt dashed #000;
-  padding: 1.5em;
-  text-align: center;
-  font-size: ${noticeBodySize}pt;
-  line-height: 1.8;
-}
-
-@media print {
-  html, body { background: #fff; margin: 0; padding: 0; }
-  .fb-toolbar { display: none !important; }
-  #fb-staging { display: none !important; }
-  #fb-output { padding: 0; display: block; }
-  .fb-page { margin: 0; box-shadow: none; page-break-after: always; break-after: page; }
-  .fb-page:last-child { page-break-after: auto; break-after: auto; }
-}
-`;
-}
+  text-decoration-skip-ink:

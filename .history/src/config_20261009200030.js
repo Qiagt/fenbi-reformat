@@ -34,21 +34,13 @@ export function defaultSettings() {
     materialMarginBottom: 15,
 
     // ---- 偏好 ----
-    paginationMode: 'fine',
+    paginationMode: 'fine',   // 'balanced' | 'fine' | 'whole'
     marginTop: 18,
     marginBottom: 18,
     marginLeft: 18,
     marginRight: 18,
     footerGap: 8,
     footerTopMargin: 6,
-
-    // ---- 图片最小高度 (cm，0 = 不限制) ----
-    imgInlineOptionMinHeight: null,
-    imgInlineStemMinHeight: null,
-    imgInlineMaterialMinHeight: null,
-    imgStandaloneOptionMinHeight: null,
-    imgStandaloneStemMinHeight: null,
-    imgStandaloneMaterialMinHeight: null,
 
     // ---- 开发者 ----
     circleNumBlock: false,

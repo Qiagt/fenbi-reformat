@@ -69,6 +69,10 @@ export function runPagination(deps) {
       } else if (options.length === 2) {
         if (maxW * 2 + gap <= cw) cols = 2;
       }
+      // balanced 模式的 single-option 只含 1 个选项，不参与网格，强制 1 列
+      if (container.classList.contains('single-option')) {
+        cols = 1;
+      }
       container.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
     });
   }
@@ -265,7 +269,7 @@ export function runPagination(deps) {
 
     var mode = SETTINGS.paginationMode || 'fine';
 
-    if (mode !== 'whole') {
+    if (mode === 'fine') {
       explodeOptionsIntoRows(measure);
     }
 
@@ -390,6 +394,7 @@ export function runPagination(deps) {
         }
       }
 
+      // fullpage（封面 / 注意事项）
       if (!entry.isGroup && entry.items[0].meta.isFullPage) {
         if (curPage.content.children.length > 0) {
           pages.push(curPage);

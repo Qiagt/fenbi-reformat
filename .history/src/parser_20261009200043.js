@@ -1,9 +1,9 @@
 // ============================================================
 // 内容解析：JSON → HTML 字符串
-// 三种分页模式：
-//   'fine'     精细：题干分段 + 选项按视觉行拆 + 材料分段，块内可切
-//   'balanced' 平衡：题干分段 + 选项按视觉行拆 + 材料整体一块，块内不可切
-//   'whole'    整题：题干 + 选项合成一块 + 材料整体一块，块内不可切
+// 支持三种分页模式：
+//   'fine'     精细：题干分段 + 选项按视觉行拆 + 材料分段（当前行为）
+//   'balanced' 平衡：题干分段 + 每个选项一个 block + 材料整体一个 block
+//   'whole'    整题：整道题一个 block（题干+选项），材料整体一个 block
 // ============================================================
 
 let _imgIdCounter = 0;
@@ -53,21 +53,41 @@ export function parseContentToHTML(arr, type) {
     } else if (it && it.img) {
       const url = it.img.startsWith('//') ? 'https:' + it.img : it.img;
       let cls = '';
-      let ctx = '';
       if (single) {
-        if (type === 'stem') { cls = 'fb-img-standalone-stem'; ctx = 'stem'; }
-        else if (type === 'option') { cls = 'fb-img-standalone-option'; ctx = 'option'; }
-        else { cls = 'fb-img-standalone-material'; ctx = 'material'; }
+        if (type === 'stem') cls = 'fb-img-standalone-stem';
+        else if (type === 'option') cls = 'fb-img-standalone-option';
+        else cls = 'fb-img-standalone-material';
       } else {
         cls = 'fb-img-inline';
-        ctx = type;   // stem / option / material
       }
       const imgId = nextImgId();
-      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" data-img-context="${ctx}" />`;
+      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" />`;
     }
   }
   return html;
 }
+
+function buildOptionsHTML(item, labels, s) {
+  if (!item.options || item.options.length === 0) return '';
+  const mode = s.paginationMode || 'fine';
+
+  if (mode === 'balanced') {
+    // 每个选项独立成块
+    return item.options.map((opt, i) => {
+      const content = parseContentToHTML(opt, 'option');
+      return `<div class="fb-options single-option"><div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div></div>`;
+    }).join('');
+  }
+
+  // fine / whole 都用同一个结构：一个 .fb-options 容器包所有选项
+  let optsHTML = '';
+  for (let i = 0; i < item.options.length; i++) {
+    const content = parseContentToHTML(item.options[i], 'option');
+    optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
+  }
+  return `<div class="fb-options">${optsHTML}</div>`;
+}
+
 export function buildBlocks(data, settings, extras) {
   const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   const s = settings;
@@ -118,8 +138,20 @@ export function buildBlocks(data, settings, extras) {
     if (item.type === 'material') {
       const paras = item.paragraphs || [];
 
-      if (mode === 'fine') {
-        // 精细：每段一块，块内可切
+      if (mode === 'balanced' || mode === 'whole') {
+        // 整个材料作为一个 block
+        let inner = '';
+        for (const p of paras) {
+          inner += `<div class="fb-material-paragraph">${parseContentToHTML(p, 'material')}</div>`;
+        }
+        blocks.push({
+          html: `<div class="fb-material">${inner}</div>`,
+          isChapter: false,
+          qGroup: null,
+          sliceable: mode === 'balanced',
+        });
+      } else {
+        // fine：每段独立
         const circleFlags = s.circleNumBlock ? paras.map(isCircleNumPara) : [];
         for (let mi = 0; mi < paras.length; mi++) {
           let noSlice = false;
@@ -135,18 +167,6 @@ export function buildBlocks(data, settings, extras) {
             sliceable: !noSlice,
           });
         }
-      } else {
-        // balanced / whole：整体一块，块内不可切
-        let inner = '';
-        for (const p of paras) {
-          inner += `<div class="fb-material-paragraph">${parseContentToHTML(p, 'material')}</div>`;
-        }
-        blocks.push({
-          html: `<div class="fb-material">${inner}</div>`,
-          isChapter: false,
-          qGroup: null,
-          sliceable: false,
-        });
       }
       continue;
     }
@@ -158,26 +178,18 @@ export function buildBlocks(data, settings, extras) {
       else if (item.questionType === '判断题') typeLabel = '<strong>（判断题）</strong>';
 
       const stemParts = item.stem.map((p) => parseContentToHTML(p, 'stem'));
+      const optionsHTML = buildOptionsHTML(item, labels, s);
 
-      // ---------- whole：整题一块 ----------
       if (mode === 'whole') {
+        // 整题一个 block
         let html = `<div class="fb-question-whole">`;
         html += `<div class="fb-question-stem"><span class="fb-q-num">${qNum}.</span><div class="fb-stem-content"><div class="fb-stem-first">${typeLabel}${stemParts[0] || ''}</div>`;
         for (let i = 1; i < stemParts.length; i++) {
           html += `<div class="fb-stem-paragraph">${stemParts[i]}</div>`;
         }
         html += `</div></div>`;
-
-        if (item.options && item.options.length > 0) {
-          let optsHTML = '';
-          for (let i = 0; i < item.options.length; i++) {
-            const content = parseContentToHTML(item.options[i], 'option');
-            optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
-          }
-          html += `<div class="fb-options">${optsHTML}</div>`;
-        }
+        html += optionsHTML;
         html += `</div>`;
-
         blocks.push({
           html,
           qGroup: qNum,
@@ -189,44 +201,7 @@ export function buildBlocks(data, settings, extras) {
         continue;
       }
 
-      // ---------- balanced：题干分段，每段一块；选项一个块；块内不可切 ----------
-      if (mode === 'balanced') {
-        blocks.push({
-          html: `<div class="fb-question-stem"><span class="fb-q-num">${qNum}.</span><div class="fb-stem-content"><div class="fb-stem-first">${typeLabel}${stemParts[0] || ''}</div></div></div>`,
-          qGroup: qNum,
-          isChapter: false,
-          sliceable: false,
-          hasQNum: true,
-        });
-
-        for (let i = 1; i < stemParts.length; i++) {
-          blocks.push({
-            html: `<div class="fb-stem-continuation"><div class="fb-stem-content"><div class="fb-stem-paragraph">${stemParts[i]}</div></div></div>`,
-            qGroup: qNum,
-            isChapter: false,
-            sliceable: false,
-          });
-        }
-
-        if (item.options && item.options.length > 0) {
-          let optsHTML = '';
-          for (let i = 0; i < item.options.length; i++) {
-            const content = parseContentToHTML(item.options[i], 'option');
-            optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
-          }
-          blocks.push({
-            html: `<div class="fb-options">${optsHTML}</div>`,
-            qGroup: qNum,
-            isChapter: false,
-            isOptions: true,
-            sliceable: false,
-          });
-        }
-        qNum++;
-        continue;
-      }
-
-      // ---------- fine：题干分段 + 选项块，块内可切 ----------
+      // fine / balanced：题干分段 + 选项块
       const stemCircleFlags = s.circleNumBlock
         ? item.stem.map(isCircleNumPara)
         : [];
@@ -256,19 +231,33 @@ export function buildBlocks(data, settings, extras) {
         });
       }
 
-      if (item.options && item.options.length > 0) {
-        let optsHTML = '';
-        for (let i = 0; i < item.options.length; i++) {
-          const content = parseContentToHTML(item.options[i], 'option');
-          optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
+      if (optionsHTML) {
+        if (mode === 'balanced') {
+          // 每个选项一个 block（buildOptionsHTML 已拆好）
+          // 但 hasQNum 只对第一个
+          const optionBlocks = optionsHTML.split('</div><div class="fb-options single-option">');
+          // 上面这行不可靠，换一种做法：让 buildOptionsHTML 返回数组
+          // 简化：直接在这重新生成
+          for (let i = 0; i < item.options.length; i++) {
+            const content = parseContentToHTML(item.options[i], 'option');
+            blocks.push({
+              html: `<div class="fb-options single-option"><div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div></div>`,
+              qGroup: qNum,
+              isChapter: false,
+              isOptions: true,
+              sliceable: false,
+            });
+          }
+        } else {
+          // fine：一个 .fb-options 块（后续会被 explodeOptionsIntoRows 拆行）
+          blocks.push({
+            html: optionsHTML,
+            qGroup: qNum,
+            isChapter: false,
+            isOptions: true,
+            sliceable: false,
+          });
         }
-        blocks.push({
-          html: `<div class="fb-options">${optsHTML}</div>`,
-          qGroup: qNum,
-          isChapter: false,
-          isOptions: true,
-          sliceable: false,
-        });
       }
 
       qNum++;

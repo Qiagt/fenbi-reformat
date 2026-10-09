@@ -53,21 +53,20 @@ export function parseContentToHTML(arr, type) {
     } else if (it && it.img) {
       const url = it.img.startsWith('//') ? 'https:' + it.img : it.img;
       let cls = '';
-      let ctx = '';
       if (single) {
-        if (type === 'stem') { cls = 'fb-img-standalone-stem'; ctx = 'stem'; }
-        else if (type === 'option') { cls = 'fb-img-standalone-option'; ctx = 'option'; }
-        else { cls = 'fb-img-standalone-material'; ctx = 'material'; }
+        if (type === 'stem') cls = 'fb-img-standalone-stem';
+        else if (type === 'option') cls = 'fb-img-standalone-option';
+        else cls = 'fb-img-standalone-material';
       } else {
         cls = 'fb-img-inline';
-        ctx = type;   // stem / option / material
       }
       const imgId = nextImgId();
-      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" data-img-context="${ctx}" />`;
+      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" />`;
     }
   }
   return html;
 }
+
 export function buildBlocks(data, settings, extras) {
   const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   const s = settings;

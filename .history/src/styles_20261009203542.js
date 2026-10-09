@@ -34,12 +34,10 @@ export function buildCSS(settings, pageSize, pageSizes) {
   const sealNameWidthMm = (2 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
   const sealIdWidthMm   = (4 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
 
-  const imgInlineOptionMH   = settings.imgInlineOptionMinHeight   != null ? settings.imgInlineOptionMinHeight   : 0.5;
-  const imgInlineStemMH     = settings.imgInlineStemMinHeight     != null ? settings.imgInlineStemMinHeight     : 1;
-  const imgInlineMaterialMH = settings.imgInlineMaterialMinHeight != null ? settings.imgInlineMaterialMinHeight : 4;
-  const imgStandaloneOptionMH   = settings.imgStandaloneOptionMinHeight   != null ? settings.imgStandaloneOptionMinHeight   : 2;
-  const imgStandaloneStemMH     = settings.imgStandaloneStemMinHeight     != null ? settings.imgStandaloneStemMinHeight     : 4;
-  const imgStandaloneMaterialMH = settings.imgStandaloneMaterialMinHeight != null ? settings.imgStandaloneMaterialMinHeight : 4;
+  const imgInlineMH = settings.imgInlineMinHeight || 0;
+  const imgStandaloneMH = settings.imgStandaloneMinHeight || 0;
+  const imgMatStandaloneMH = settings.imgMaterialStandaloneMinHeight || 0;
+  const imgMatInlineMH = settings.imgMaterialInlineMinHeight || 0;
 
   return `
 ${fontFaces}
@@ -66,29 +64,13 @@ html, body {
   text-justify: auto;
 }
 
-.fb-toolbar {
-  position: fixed;
-  top: 50%;
-  right: 320px;
-  transform: translateY(-50%);
-  z-index: 1000;
-}
+.fb-toolbar { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; }
 .fb-toolbar button {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  padding: 16px 8px;
-  background: #40C463;
-  color: #fff;
-  border: 1px solid #40C463;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  cursor: pointer;
-  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  padding: 10px 20px; background: #4f46e5; color: #fff; border: none;
+  border-radius: 6px; font-size: 16px; cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;
 }
-.fb-toolbar button:hover { background: #30A14E; border-color: #30A14E; }
-.fb-toolbar button:active { background: #216E39; border-color: #216E39; }
+.fb-toolbar button:hover { background: #4338ca; }
 
 #fb-output { display: flex; flex-direction: column; align-items: center; padding: 20px 0 40px 0; }
 #fb-staging { position: absolute; left: -99999px; top: 0; visibility: hidden; }
@@ -177,14 +159,13 @@ html, body {
 .fb-option-content { flex: 1; min-width: 0; text-align: left; word-break: break-word; }
 
 /* ============ 图片 ============ */
-/* 独立图 */
 .fb-img-standalone-stem {
   max-height: 4cm;
   width: auto;
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneStemMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-option {
   max-height: 2cm;
@@ -193,7 +174,7 @@ html, body {
   display: block;
   margin: 5px 0;
   object-fit: contain;
-  min-height: ${imgStandaloneOptionMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-material {
   max-height: 4cm;
@@ -201,33 +182,29 @@ html, body {
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneMaterialMH}cm;
+  ${imgMatStandaloneMH > 0 ? `min-height: ${imgMatStandaloneMH}cm;` : ''}
 }
-
-/* 行内图 */
 .fb-img-inline {
   max-height: 1cm;
   width: auto;
   vertical-align: middle;
   margin: 0 2px;
+  ${imgInlineMH > 0 ? `min-height: ${imgInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="stem"] {
-  min-height: ${imgInlineStemMH}cm;
+.fb-material .fb-img-inline {
+  max-height: 4cm;
+  ${imgMatInlineMH > 0 ? `min-height: ${imgMatInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="option"] {
-  min-height: ${imgInlineOptionMH}cm;
-}
-img.fb-img-inline[data-img-context="material"] {
-  min-height: ${imgInlineMaterialMH}cm;
-}
+
 .fb-blank {
   text-decoration: underline;
   text-underline-offset: auto;
   text-decoration-skip-ink: none;
   white-space: pre;
-  margin: 0;
+  margin: 0 2px;
 }
 
+/* 图片选中高亮 */
 img.fb-img-selected {
   outline: 1px solid #dc2626;
   outline-offset: 2px;

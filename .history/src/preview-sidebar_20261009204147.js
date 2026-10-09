@@ -15,14 +15,14 @@ const SIDEBAR_CSS = `
   top: 0; right: 0; bottom: 0;
   width: 320px;
   background: #fff;
-  border-left: 1px solid #d0d7de;
-  box-shadow: -1px 0 6px rgba(0,0,0,.06);
+  border-left: 1px solid #ccc;
+  box-shadow: -1px 0 4px rgba(0,0,0,.06);
   z-index: 100;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
   font-size: 13px;
-  color: #1f2328;
+  color: #222;
   transition: transform .15s ease;
 }
 .fb-sidebar.collapsed { transform: translateX(320px); }
@@ -30,15 +30,14 @@ const SIDEBAR_CSS = `
 .fb-sidebar-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px 12px;
-  background: #216E39; color: #fff;
+  background: #333; color: #eee;
   font-size: 13px;
-  font-weight: 500;
 }
 .fb-sidebar-toggle {
   cursor: pointer; user-select: none;
   padding: 0 4px;
   font-size: 14px; line-height: 1;
-  color: rgba(255,255,255,.7);
+  color: #ccc;
 }
 .fb-sidebar-toggle:hover { color: #fff; }
 
@@ -52,10 +51,10 @@ const SIDEBAR_CSS = `
   top: 50%; right: 0;
   transform: translateY(-50%);
   width: 24px; height: 56px;
-  background: #40C463;
-  color: #fff;
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
+  background: #333;
+  color: #eee;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
   cursor: pointer;
   display: none;
   align-items: center;
@@ -75,7 +74,7 @@ const SIDEBAR_CSS = `
 }
 .fb-sidebar .fb-form-group > label {
   font-size: 12px;
-  color: #57606a;
+  color: #555;
   margin: 0;
 }
 .fb-sidebar .fb-form-group input[type="number"],
@@ -84,17 +83,16 @@ const SIDEBAR_CSS = `
   width: 100%;
   padding: 3px 6px;
   font-size: 12px;
-  color: #1f2328;
+  color: #222;
   background: #fff;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
   box-sizing: border-box;
 }
 .fb-sidebar .fb-form-group input:focus,
 .fb-sidebar .fb-form-group select:focus {
-  border-color: #40C463;
+  border-color: #666;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(64,196,99,.2);
 }
 
 .fb-sidebar .fb-row { display: flex; gap: 4px; }
@@ -104,27 +102,26 @@ const SIDEBAR_CSS = `
   display: inline-block;
   padding: 3px 8px;
   font-size: 12px;
-  color: #1f2328;
-  background: #f6f8fa;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
+  color: #222;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 2px;
   cursor: pointer;
   white-space: nowrap;
 }
-.fb-sidebar .fb-mini-btn:hover { background: #eaeef2; }
-.fb-sidebar .fb-mini-btn:active { background: #d0d7de; }
+.fb-sidebar .fb-mini-btn:hover { background: #e0e0e0; }
+.fb-sidebar .fb-mini-btn:active { background: #d0d0d0; }
 
 .fb-sidebar .fb-checkbox {
   display: flex; align-items: center; gap: 5px;
   font-size: 12px;
-  color: #1f2328;
+  color: #222;
   cursor: pointer;
   grid-column: 1 / -1;
 }
 .fb-sidebar .fb-checkbox input[type="checkbox"] {
   width: 13px; height: 13px;
   margin: 0;
-  accent-color: #40C463;
 }
 
 .fb-sidebar .fb-margin-row {
@@ -143,28 +140,26 @@ const SIDEBAR_CSS = `
 
 /* ---- details ---- */
 .fb-sidebar details {
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
   padding: 0;
   margin-bottom: 8px;
-  overflow: hidden;
 }
 .fb-sidebar details summary {
   cursor: pointer;
   font-size: 12px;
-  color: #1f2328;
-  font-weight: 500;
-  padding: 6px 10px;
+  color: #222;
+  padding: 5px 8px;
   list-style: none;
   user-select: none;
-  background: #f6f8fa;
-  border-left: 3px solid #9BE9A8;
+  background: #fafafa;
+  border-left: 3px solid #bbb;
 }
-.fb-sidebar details summary:hover { background: #eaeef2; }
+.fb-sidebar details summary:hover { background: #f0f0f0; }
 .fb-sidebar details summary::-webkit-details-marker { display: none; }
 .fb-sidebar details[open] summary {
-  border-bottom: 1px solid #eaeef2;
-  border-left-color: #40C463;
+  border-bottom: 1px solid #e0e0e0;
+  border-left-color: #333;
 }
 .fb-sidebar details > .fb-form-group,
 .fb-sidebar details > .fb-margin-row,
@@ -200,7 +195,7 @@ export function buildPreviewSidebar(opts) {
       <div class="fb-sidebar-body" id="fb-sidebar-body">
         <div id="fb-sidebar-page-panel"></div>
         <div id="fb-sidebar-image-panel" style="display:none;"></div>
-        <div style="display:flex;gap:6px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding-top:8px;border-top:1px solid #eaeef2;">
+        <div style="display:flex;gap:6px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding-top:8px;border-top:1px solid #eee;">
           <button class="fb-mini-btn" id="fb-sidebar-export" style="flex:1;">导出配置</button>
           <button class="fb-mini-btn" id="fb-sidebar-import" style="flex:1;">导入配置</button>
         </div>
@@ -278,22 +273,22 @@ export function buildPreviewSidebar(opts) {
 
     imagePanel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong style="font-size:12px;color:#1f2328;">图片设置</strong>
+        <strong style="font-size:12px;color:#222;">图片设置</strong>
         <button class="fb-mini-btn" id="fb-img-close">返回</button>
       </div>
-      <div style="border:1px solid #40C463;border-radius:4px;padding:8px;margin-bottom:10px;background:#F0FDF4;">
-        <div style="font-size:12px;color:#216E39;font-weight:bold;margin-bottom:6px;">
+      <div style="border:1px solid #4f46e5;border-radius:4px;padding:8px;margin-bottom:10px;background:#eef2ff;">
+        <div style="font-size:12px;color:#4f46e5;font-weight:bold;margin-bottom:6px;">
           当前选中：${imgId}
         </div>
         <img src="${src}" style="max-width:100%;max-height:120px;display:block;margin:0 auto;object-fit:contain;">
       </div>
-      <div style="font-size:11px;color:#57606a;margin-bottom:10px;">
+      <div style="font-size:11px;color:#666;margin-bottom:10px;">
         原始: ${naturalW}×${naturalH}<br>当前显示高度: ${currentCm} cm
       </div>
       <div class="fb-form-group"><label>最大高度 (cm，留空 = 使用默认)</label>
         <input type="number" id="fb-img-h-cm" min="0.1" step="0.1" placeholder="如 4">
       </div>
-      <p style="font-size:11px;color:#8b949e;margin-top:6px;line-height:1.5;">
+      <p style="font-size:11px;color:#888;margin-top:6px;line-height:1.5;">
         只改图片的最大高度上限，宽度仍按原规则自适应。
       </p>
     `;

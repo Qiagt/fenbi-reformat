@@ -177,14 +177,13 @@ html, body {
 .fb-option-content { flex: 1; min-width: 0; text-align: left; word-break: break-word; }
 
 /* ============ 图片 ============ */
-/* 独立图 */
 .fb-img-standalone-stem {
   max-height: 4cm;
   width: auto;
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneStemMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-option {
   max-height: 2cm;
@@ -193,7 +192,7 @@ html, body {
   display: block;
   margin: 5px 0;
   object-fit: contain;
-  min-height: ${imgStandaloneOptionMH}cm;
+  ${imgStandaloneMH > 0 ? `min-height: ${imgStandaloneMH}cm;` : ''}
 }
 .fb-img-standalone-material {
   max-height: 4cm;
@@ -201,31 +200,26 @@ html, body {
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneMaterialMH}cm;
+  ${imgMatStandaloneMH > 0 ? `min-height: ${imgMatStandaloneMH}cm;` : ''}
 }
-
-/* 行内图 */
 .fb-img-inline {
   max-height: 1cm;
   width: auto;
   vertical-align: middle;
   margin: 0 2px;
+  ${imgInlineMH > 0 ? `min-height: ${imgInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="stem"] {
-  min-height: ${imgInlineStemMH}cm;
+.fb-material .fb-img-inline {
+  max-height: 4cm;
+  ${imgMatInlineMH > 0 ? `min-height: ${imgMatInlineMH}cm;` : ''}
 }
-img.fb-img-inline[data-img-context="option"] {
-  min-height: ${imgInlineOptionMH}cm;
-}
-img.fb-img-inline[data-img-context="material"] {
-  min-height: ${imgInlineMaterialMH}cm;
-}
+
 .fb-blank {
   text-decoration: underline;
   text-underline-offset: auto;
   text-decoration-skip-ink: none;
   white-space: pre;
-  margin: 0;
+  margin: 0 2px;
 }
 
 img.fb-img-selected {

@@ -79,19 +79,13 @@ export function buildSettingsFormHTML(fontOptions, config) {
 
       <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="circleNumBlock">圆圈序号段落独立成块</label></div>
 
-      <details>
-        <summary>行内图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgInlineOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgInlineStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgInlineMaterialMinHeight" min="0" max="20" step="0.1"></div>
-      </details>
-
-      <details>
-        <summary>独立图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgStandaloneOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgStandaloneStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgStandaloneMaterialMinHeight" min="0" max="20" step="0.1"></div>
-      </details>
+      <div style="font-size:12px;color:#555;margin:10px 0 4px;">图片最小高度 (cm，0 = 不限制)</div>
+      <div class="fb-margin-row">
+        <div class="fb-form-group"><label>行内图</label><input type="number" data-cfg="imgInlineMinHeight" min="0" max="20" step="0.1"></div>
+        <div class="fb-form-group"><label>独立图</label><input type="number" data-cfg="imgStandaloneMinHeight" min="0" max="20" step="0.1"></div>
+        <div class="fb-form-group"><label>材料独立图</label><input type="number" data-cfg="imgMaterialStandaloneMinHeight" min="0" max="20" step="0.1"></div>
+        <div class="fb-form-group"><label>材料行内图</label><input type="number" data-cfg="imgMaterialInlineMinHeight" min="0" max="20" step="0.1"></div>
+      </div>
     </details>
   `;
 }

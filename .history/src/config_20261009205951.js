@@ -43,12 +43,12 @@ export function defaultSettings() {
     footerTopMargin: 6,
 
     // ---- 图片最小高度 (cm，0 = 不限制) ----
-    imgInlineOptionMinHeight: null,
-    imgInlineStemMinHeight: null,
-    imgInlineMaterialMinHeight: null,
-    imgStandaloneOptionMinHeight: null,
-    imgStandaloneStemMinHeight: null,
-    imgStandaloneMaterialMinHeight: null,
+    imgInlineOptionMinHeight: 0.5,
+    imgInlineStemMinHeight: 1,
+    imgInlineMaterialMinHeight: 4,
+    imgStandaloneOptionMinHeight: 2,
+    imgStandaloneStemMinHeight: 4,
+    imgStandaloneMaterialMinHeight: 4,
 
     // ---- 开发者 ----
     circleNumBlock: false,
