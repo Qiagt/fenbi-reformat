@@ -34,6 +34,13 @@ export function buildCSS(settings, pageSize, pageSizes) {
   const sealNameWidthMm = (2 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
   const sealIdWidthMm   = (4 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
 
+  const imgInlineOptionMH   = settings.imgInlineOptionMinHeight   != null ? settings.imgInlineOptionMinHeight   : 0.5;
+  const imgInlineStemMH     = settings.imgInlineStemMinHeight     != null ? settings.imgInlineStemMinHeight     : 1;
+  const imgInlineMaterialMH = settings.imgInlineMaterialMinHeight != null ? settings.imgInlineMaterialMinHeight : 4;
+  const imgStandaloneOptionMH   = settings.imgStandaloneOptionMinHeight   != null ? settings.imgStandaloneOptionMinHeight   : 2;
+  const imgStandaloneStemMH     = settings.imgStandaloneStemMinHeight     != null ? settings.imgStandaloneStemMinHeight     : 4;
+  const imgStandaloneMaterialMH = settings.imgStandaloneMaterialMinHeight != null ? settings.imgStandaloneMaterialMinHeight : 4;
+
   return `
 ${fontFaces}
 
@@ -59,13 +66,29 @@ html, body {
   text-justify: auto;
 }
 
-.fb-toolbar { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; }
-.fb-toolbar button {
-  padding: 10px 20px; background: #4f46e5; color: #fff; border: none;
-  border-radius: 6px; font-size: 16px; cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;
+.fb-toolbar {
+  position: fixed;
+  top: 50%;
+  right: 320px;
+  transform: translateY(-50%);
+  z-index: 1000;
 }
-.fb-toolbar button:hover { background: #4338ca; }
+.fb-toolbar button {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  padding: 16px 8px;
+  background: #40C463;
+  color: #fff;
+  border: 1px solid #40C463;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+.fb-toolbar button:hover { background: #30A14E; border-color: #30A14E; }
+.fb-toolbar button:active { background: #216E39; border-color: #216E39; }
 
 #fb-output { display: flex; flex-direction: column; align-items: center; padding: 20px 0 40px 0; }
 #fb-staging { position: absolute; left: -99999px; top: 0; visibility: hidden; }
@@ -153,21 +176,58 @@ html, body {
 }
 .fb-option-content { flex: 1; min-width: 0; text-align: left; word-break: break-word; }
 
-.fb-img-standalone-stem { max-height: 4cm; width: auto; display: block; margin: 5px auto; object-fit: contain; }
-.fb-img-standalone-option { max-height: 2cm; max-width: 100%; width: auto; display: block; margin: 5px 0; object-fit: contain; }
-.fb-img-standalone-material { max-height: 4cm; width: auto; display: block; margin: 5px auto; object-fit: contain; }
-.fb-img-inline { max-height: 1cm; width: auto; vertical-align: middle; margin: 0 2px; }
-.fb-material .fb-img-inline { max-height: 4cm; }
+/* ============ 图片 ============ */
+/* 独立图 */
+.fb-img-standalone-stem {
+  max-height: 4cm;
+  width: auto;
+  display: block;
+  margin: 5px auto;
+  object-fit: contain;
+  min-height: ${imgStandaloneStemMH}cm;
+}
+.fb-img-standalone-option {
+  max-height: 2cm;
+  max-width: 100%;
+  width: auto;
+  display: block;
+  margin: 5px 0;
+  object-fit: contain;
+  min-height: ${imgStandaloneOptionMH}cm;
+}
+.fb-img-standalone-material {
+  max-height: 4cm;
+  width: auto;
+  display: block;
+  margin: 5px auto;
+  object-fit: contain;
+  min-height: ${imgStandaloneMaterialMH}cm;
+}
 
+/* 行内图 */
+.fb-img-inline {
+  max-height: 1cm;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+img.fb-img-inline[data-img-context="stem"] {
+  min-height: ${imgInlineStemMH}cm;
+}
+img.fb-img-inline[data-img-context="option"] {
+  min-height: ${imgInlineOptionMH}cm;
+}
+img.fb-img-inline[data-img-context="material"] {
+  min-height: ${imgInlineMaterialMH}cm;
+}
 .fb-blank {
   text-decoration: underline;
   text-underline-offset: auto;
   text-decoration-skip-ink: none;
   white-space: pre;
-  margin: 0 2px;
+  margin: 0;
 }
 
-/* 图片选中高亮 */
 img.fb-img-selected {
   outline: 1px solid #dc2626;
   outline-offset: 2px;
@@ -178,7 +238,7 @@ img.fb-img-selected {
   position: relative;
   width: 100%;
   min-height: 100%;
-  font-family: "SimHei", "黑体", sans-serif;
+  font-family: ${ff('SimHei')};
   --seal-line-x: ${sealLineX}mm;
   --seal-text-x: ${sealTextX}mm;
   --seal-name-y: ${sealNameY}mm;
@@ -201,7 +261,7 @@ img.fb-img-selected {
 .fb-seal-item {
   position: absolute;
   left: var(--seal-text-x);
-  font-family: "SimHei", "黑体", sans-serif;
+  font-family: ${ff('SimHei')};
   font-size: ${sealFontSize}pt;
   color: #000;
   white-space: nowrap;
@@ -238,23 +298,26 @@ img.fb-img-selected {
 }
 .fb-cover-title {
   text-align: center;
+  font-family: ${ff('SimHei')};
   font-size: ${coverTitleSize}pt;
   letter-spacing: 0.05em;
   margin: 0;
 }
 .fb-cover-subject {
   text-align: center;
+  font-family: ${ff('SimHei')};
   font-size: ${coverSubjectSize}pt;
   letter-spacing: 0.1em;
   margin: 0.5em 0 0 0;
 }
 .fb-cover-tips-title {
+  font-family: ${ff('SimHei')};
   font-size: ${coverTipTitleSize}pt;
   margin-top: 3em;
   margin-bottom: 1em;
 }
 .fb-cover-tips {
-  font-family: "FangSong_GB2312", "仿宋_GB2312", "FangSong", "仿宋", serif;
+  font-family: ${ff('FangSong')};
   font-size: ${coverTipSize}pt;
   line-height: 1.5;
   padding-left: 1.5em;
@@ -264,7 +327,7 @@ img.fb-img-selected {
 .fb-cover-tips li { margin-bottom: 2em; }
 .fb-cover-footer {
   text-align: center;
-  font-family: "SimHei", "黑体", sans-serif;
+  font-family: ${ff('SimHei')};
   font-size: ${coverTipSize}pt;
   margin-top: 3em;
   padding-bottom: 1em;
@@ -274,18 +337,20 @@ img.fb-img-selected {
 .fb-notice {
   position: relative;
   min-height: 100%;
-  font-family: "SimHei", "黑体", sans-serif;
+  font-family: ${ff('SimHei')};
   display: flex;
   flex-direction: column;
 }
 .fb-notice-title {
   text-align: center;
+  font-family: ${ff('SimHei')};
   font-size: ${noticeTitleSize}pt;
   letter-spacing: 0.58em;
   margin: 2em 0 2em 0;
   font-weight: normal;
 }
 .fb-notice-rules {
+  font-family: ${ff('SimHei')};
   font-size: ${noticeBodySize}pt;
   line-height: 1.8;
   padding-left: 1.5em;
@@ -294,6 +359,7 @@ img.fb-img-selected {
 }
 .fb-notice-rules li { margin-bottom: 1.2em; }
 .fb-notice-warning {
+  font-family: ${ff('SimHei')};
   width: 60%;
   margin: 2em auto;
   border: 1.5pt dashed #000;

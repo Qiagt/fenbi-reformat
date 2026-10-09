@@ -263,7 +263,11 @@ export function runPagination(deps) {
     var staging = document.getElementById('fb-staging');
     var output = document.getElementById('fb-output');
 
-    explodeOptionsIntoRows(measure);
+    var mode = SETTINGS.paginationMode || 'fine';
+
+    if (mode !== 'whole') {
+      explodeOptionsIntoRows(measure);
+    }
 
     // 统一题号宽度
     (function () {
@@ -344,7 +348,8 @@ export function runPagination(deps) {
     });
 
     var queue;
-    if (SETTINGS.keepQuestionTogether) {
+    var needGroup = SETTINGS.keepQuestionTogether || mode === 'whole';
+    if (needGroup) {
       queue = [];
       var qi = 0;
       while (qi < rawQueue.length) {
@@ -385,7 +390,6 @@ export function runPagination(deps) {
         }
       }
 
-      // fullpage（封面 / 注意事项）：独占一页
       if (!entry.isGroup && entry.items[0].meta.isFullPage) {
         if (curPage.content.children.length > 0) {
           pages.push(curPage);
@@ -512,7 +516,6 @@ export function runPagination(deps) {
       if (last) last.style.marginBottom = '0';
     });
 
-    // 封面 / 注意事项页不显示页码；正文从 1 开始计数
     var bodyPages = [];
     pages.forEach(function (p) {
       var isCover = p.content.querySelector('.fb-cover') !== null;

@@ -1,5 +1,9 @@
 // ============================================================
 // 内容解析：JSON → HTML 字符串
+// 三种分页模式：
+//   'fine'     精细：题干分段 + 选项按视觉行拆 + 材料分段，块内可切
+//   'balanced' 平衡：题干分段 + 选项按视觉行拆 + 材料整体一块，块内不可切
+//   'whole'    整题：题干 + 选项合成一块 + 材料整体一块，块内不可切
 // ============================================================
 
 let _imgIdCounter = 0;
@@ -49,23 +53,25 @@ export function parseContentToHTML(arr, type) {
     } else if (it && it.img) {
       const url = it.img.startsWith('//') ? 'https:' + it.img : it.img;
       let cls = '';
+      let ctx = '';
       if (single) {
-        if (type === 'stem') cls = 'fb-img-standalone-stem';
-        else if (type === 'option') cls = 'fb-img-standalone-option';
-        else cls = 'fb-img-standalone-material';
+        if (type === 'stem') { cls = 'fb-img-standalone-stem'; ctx = 'stem'; }
+        else if (type === 'option') { cls = 'fb-img-standalone-option'; ctx = 'option'; }
+        else { cls = 'fb-img-standalone-material'; ctx = 'material'; }
       } else {
         cls = 'fb-img-inline';
+        ctx = type;   // stem / option / material
       }
       const imgId = nextImgId();
-      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" />`;
+      html += `<img src="${url}" class="${cls}" data-img-id="${imgId}" data-img-context="${ctx}" />`;
     }
   }
   return html;
 }
-
 export function buildBlocks(data, settings, extras) {
   const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   const s = settings;
+  const mode = s.paginationMode || 'fine';
   const blocks = [];
 
   resetImgIdCounter();
@@ -93,6 +99,7 @@ export function buildBlocks(data, settings, extras) {
   let chapterIdx = 0;
 
   for (const item of data.items) {
+    // ---------- 模块 ----------
     if (item.type === 'chapter') {
       chapterIdx++;
       const prefix = s.chapterShowPartIndex
@@ -107,31 +114,119 @@ export function buildBlocks(data, settings, extras) {
       continue;
     }
 
+    // ---------- 材料 ----------
     if (item.type === 'material') {
       const paras = item.paragraphs || [];
-      const circleFlags = s.circleNumBlock ? paras.map(isCircleNumPara) : [];
-      for (let mi = 0; mi < paras.length; mi++) {
-        let noSlice = false;
-        if (s.circleNumBlock && circleFlags[mi]) {
-          noSlice =
-            (mi > 0 && circleFlags[mi - 1]) ||
-            (mi < circleFlags.length - 1 && circleFlags[mi + 1]);
+
+      if (mode === 'fine') {
+        // 精细：每段一块，块内可切
+        const circleFlags = s.circleNumBlock ? paras.map(isCircleNumPara) : [];
+        for (let mi = 0; mi < paras.length; mi++) {
+          let noSlice = false;
+          if (s.circleNumBlock && circleFlags[mi]) {
+            noSlice =
+              (mi > 0 && circleFlags[mi - 1]) ||
+              (mi < circleFlags.length - 1 && circleFlags[mi + 1]);
+          }
+          blocks.push({
+            html: `<div class="fb-material"><div class="fb-material-paragraph">${parseContentToHTML(paras[mi], 'material')}</div></div>`,
+            isChapter: false,
+            qGroup: null,
+            sliceable: !noSlice,
+          });
+        }
+      } else {
+        // balanced / whole：整体一块，块内不可切
+        let inner = '';
+        for (const p of paras) {
+          inner += `<div class="fb-material-paragraph">${parseContentToHTML(p, 'material')}</div>`;
         }
         blocks.push({
-          html: `<div class="fb-material"><div class="fb-material-paragraph">${parseContentToHTML(paras[mi], 'material')}</div></div>`,
+          html: `<div class="fb-material">${inner}</div>`,
           isChapter: false,
           qGroup: null,
-          sliceable: !noSlice,
+          sliceable: false,
         });
       }
       continue;
     }
 
+    // ---------- 题目 ----------
     if (item.type === 'question') {
       let typeLabel = '';
       if (item.questionType === '多选题') typeLabel = '<strong>（多选题）</strong>';
       else if (item.questionType === '判断题') typeLabel = '<strong>（判断题）</strong>';
+
       const stemParts = item.stem.map((p) => parseContentToHTML(p, 'stem'));
+
+      // ---------- whole：整题一块 ----------
+      if (mode === 'whole') {
+        let html = `<div class="fb-question-whole">`;
+        html += `<div class="fb-question-stem"><span class="fb-q-num">${qNum}.</span><div class="fb-stem-content"><div class="fb-stem-first">${typeLabel}${stemParts[0] || ''}</div>`;
+        for (let i = 1; i < stemParts.length; i++) {
+          html += `<div class="fb-stem-paragraph">${stemParts[i]}</div>`;
+        }
+        html += `</div></div>`;
+
+        if (item.options && item.options.length > 0) {
+          let optsHTML = '';
+          for (let i = 0; i < item.options.length; i++) {
+            const content = parseContentToHTML(item.options[i], 'option');
+            optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
+          }
+          html += `<div class="fb-options">${optsHTML}</div>`;
+        }
+        html += `</div>`;
+
+        blocks.push({
+          html,
+          qGroup: qNum,
+          isChapter: false,
+          sliceable: false,
+          hasQNum: true,
+        });
+        qNum++;
+        continue;
+      }
+
+      // ---------- balanced：题干分段，每段一块；选项一个块；块内不可切 ----------
+      if (mode === 'balanced') {
+        blocks.push({
+          html: `<div class="fb-question-stem"><span class="fb-q-num">${qNum}.</span><div class="fb-stem-content"><div class="fb-stem-first">${typeLabel}${stemParts[0] || ''}</div></div></div>`,
+          qGroup: qNum,
+          isChapter: false,
+          sliceable: false,
+          hasQNum: true,
+        });
+
+        for (let i = 1; i < stemParts.length; i++) {
+          blocks.push({
+            html: `<div class="fb-stem-continuation"><div class="fb-stem-content"><div class="fb-stem-paragraph">${stemParts[i]}</div></div></div>`,
+            qGroup: qNum,
+            isChapter: false,
+            sliceable: false,
+          });
+        }
+
+        if (item.options && item.options.length > 0) {
+          let optsHTML = '';
+          for (let i = 0; i < item.options.length; i++) {
+            const content = parseContentToHTML(item.options[i], 'option');
+            optsHTML += `<div class="fb-option"><div class="fb-option-label">${labels[i]}.</div><div class="fb-option-content">${content}</div></div>`;
+          }
+          blocks.push({
+            html: `<div class="fb-options">${optsHTML}</div>`,
+            qGroup: qNum,
+            isChapter: false,
+            isOptions: true,
+            sliceable: false,
+          });
+        }
+        qNum++;
+        continue;
+      }
+
+      // ---------- fine：题干分段 + 选项块，块内可切 ----------
       const stemCircleFlags = s.circleNumBlock
         ? item.stem.map(isCircleNumPara)
         : [];

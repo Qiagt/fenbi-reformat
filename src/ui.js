@@ -13,93 +13,203 @@ import {
 
 const PANEL_CSS = `
 .fb-panel {
-  position: fixed; top: 20px; right: 20px; width: 380px;
-  background: #fff; border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  position: fixed; top: 16px; right: 16px; width: 360px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
   z-index: 999999;
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden; display: flex; flex-direction: column;
-  max-height: calc(100vh - 40px);
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  color: #1f2328;
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
 }
 .fb-panel.dragging { cursor: move; }
+
 .fb-panel-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 15px; background: #4f46e5; color: #fff;
-  font-size: 14px; font-weight: bold;
+  padding: 7px 12px;
+  background: #216E39; color: #fff;
+  font-size: 13px;
+  font-weight: 500;
   cursor: move; user-select: none;
 }
 .fb-panel-minimize {
-  cursor: pointer; font-size: 18px; line-height: 1; user-select: none;
+  cursor: pointer; font-size: 14px; line-height: 1;
+  padding: 0 4px; color: rgba(255,255,255,.7);
 }
+.fb-panel-minimize:hover { color: #fff; }
+
 .fb-panel-tabs {
-  display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  background: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
 }
 .fb-tab {
-  flex: 1; text-align: center; padding: 8px; font-size: 13px;
-  cursor: pointer; color: #6b7280;
+  flex: 1; text-align: center;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #57606a;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
 }
+.fb-tab:hover { color: #1f2328; }
 .fb-tab.active {
-  background: #fff; color: #4f46e5; font-weight: bold;
-  border-bottom: 2px solid #4f46e5;
+  color: #216E39;
+  border-bottom-color: #40C463;
+  background: #fff;
+  font-weight: 500;
 }
+
 .fb-panel-body { overflow: hidden; display: flex; flex-direction: column; }
 .fb-panel.minimized .fb-panel-body,
 .fb-panel.minimized .fb-panel-tabs { display: none; }
-.fb-tab-content { display: none; padding: 12px 15px; overflow-y: auto; }
+.fb-tab-content { display: none; padding: 10px; overflow-y: auto; }
 .fb-tab-content.active { display: block; }
-.fb-tab-content[data-content="settings"] { max-height: 70vh; padding-bottom: 0; }
+.fb-tab-content[data-content="settings"] { max-height: 70vh; }
 
-#fb-generate-btn, .fb-settings-actions button {
-  width: 100%; padding: 8px 12px;
-  background: #4f46e5; color: #fff; border: none; border-radius: 4px;
-  cursor: pointer; font-size: 14px; font-weight: bold;
+#fb-generate-btn {
+  display: block; width: 100%;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #fff;
+  background: #40C463;
+  border: 1px solid #40C463;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
 }
-#fb-generate-btn:hover, .fb-settings-actions button:hover { background: #4338ca; }
+#fb-generate-btn:hover { background: #30A14E; border-color: #30A14E; }
+#fb-generate-btn:active { background: #216E39; border-color: #216E39; }
+
 .fb-settings-actions {
-  display: flex; gap: 8px; padding: 10px 0;
-  background: #fff; position: sticky; bottom: 0;
+  display: flex; gap: 6px;
+  padding: 8px 0 0 0;
+  background: #fff;
+  position: sticky; bottom: 0;
+  border-top: 1px solid #eaeef2;
 }
-.fb-settings-actions button { background: #6b7280; }
-.fb-settings-actions button:hover { background: #4b5563; }
-.fb-form-group { margin-bottom: 10px; }
+.fb-settings-actions .fb-mini-btn { flex: 1; }
+
+/* ---- 表单：左标签 右输入 ---- */
+.fb-form-group {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
 .fb-form-group > label {
-  display: block; font-size: 12px; color: #374151; margin-bottom: 4px;
+  font-size: 12px;
+  color: #57606a;
+  margin: 0;
 }
 .fb-form-group input[type="number"],
+.fb-form-group input[type="text"],
 .fb-form-group select {
-  width: 100%; padding: 5px 8px;
-  border: 1px solid #d1d5db; border-radius: 4px;
-  font-size: 13px; box-sizing: border-box;
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 12px;
+  color: #1f2328;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
-.fb-row { display: flex; gap: 6px; }
+.fb-form-group input:focus,
+.fb-form-group select:focus {
+  border-color: #40C463;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(64,196,99,.2);
+}
+
+.fb-row { display: flex; gap: 4px; }
 .fb-row select { flex: 1; }
+
 .fb-mini-btn {
-  padding: 5px 10px; background: #6b7280; color: #fff;
-  border: none; border-radius: 4px; cursor: pointer;
-  font-size: 12px; white-space: nowrap;
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #1f2328;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
 }
-.fb-mini-btn:hover { background: #4b5563; }
-.fb-checkbox { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.fb-margin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fb-mini-btn:hover { background: #eaeef2; }
+.fb-mini-btn:active { background: #d0d7de; }
+
+.fb-checkbox {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px;
+  color: #1f2328;
+  cursor: pointer;
+  grid-column: 1 / -1;
+}
+.fb-checkbox input[type="checkbox"] {
+  width: 13px; height: 13px;
+  margin: 0;
+  accent-color: #40C463;
+}
+
+.fb-margin-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.fb-margin-row .fb-form-group {
+  display: block;
+  margin-bottom: 0;
+}
+.fb-margin-row .fb-form-group > label {
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* ---- details ---- */
 .fb-panel details {
-  margin-bottom: 12px;
-  border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 0;
+  margin-bottom: 8px;
+  background: #fff;
+  overflow: hidden;
 }
 .fb-panel details summary {
-  cursor: pointer; font-size: 13px; font-weight: bold;
-  color: #4f46e5; padding: 2px 0;
+  cursor: pointer;
+  font-size: 12px;
+  color: #1f2328;
+  font-weight: 500;
+  padding: 6px 10px;
+  list-style: none;
+  user-select: none;
+  background: #f6f8fa;
+  border-left: 3px solid #9BE9A8;
 }
+.fb-panel details summary:hover { background: #eaeef2; }
+.fb-panel details summary::-webkit-details-marker { display: none; }
 .fb-panel details[open] summary {
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 6px;
+  border-bottom: 1px solid #eaeef2;
+  border-left-color: #40C463;
 }
+.fb-panel details > .fb-form-group,
+.fb-panel details > .fb-margin-row,
+.fb-panel details > p,
+.fb-panel details > div {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+.fb-panel details > *:not(summary):first-of-type { margin-top: 8px; }
+.fb-panel details > *:last-child { margin-bottom: 8px; }
 `;
 
 const PANEL_HTML = `
 <div id="fb-pdf-panel" class="fb-panel">
   <div class="fb-panel-header" id="fb-panel-drag">
-    <span>📄 粉笔试卷导出</span>
+    <span>粉笔试卷导出</span>
     <span class="fb-panel-minimize" id="fb-panel-minimize">—</span>
   </div>
   <div class="fb-panel-tabs">
@@ -130,7 +240,6 @@ export function injectPanel(opts) {
 
   const panel = document.getElementById('fb-pdf-panel');
 
-  // 拖拽
   (function setupDrag() {
     const dragHandle = document.getElementById('fb-panel-drag');
     let dragging = false;
@@ -175,7 +284,6 @@ export function injectPanel(opts) {
     });
   })();
 
-  // 折叠
   let isMinimized = false;
   document.getElementById('fb-panel-minimize').addEventListener('click', () => {
     isMinimized = !isMinimized;
@@ -183,7 +291,6 @@ export function injectPanel(opts) {
     document.getElementById('fb-panel-minimize').textContent = isMinimized ? '+' : '—';
   });
 
-  // tab 切换
   document.querySelectorAll('.fb-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fb-tab').forEach((t) => t.classList.remove('active'));
@@ -194,7 +301,6 @@ export function injectPanel(opts) {
     });
   });
 
-  // 设置表单
   const settingsScroll = document.getElementById('fb-settings-scroll');
 
   function rebuildSettingsForm() {
@@ -236,7 +342,6 @@ export function injectPanel(opts) {
 
   rebuildSettingsForm();
 
-  // 生成按钮
   document.getElementById('fb-generate-btn').addEventListener('click', () => {
     let data;
     try {
