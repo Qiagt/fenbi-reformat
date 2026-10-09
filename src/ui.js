@@ -1,14 +1,15 @@
 // ============================================================
-// 悬浮面板 UI
-// - injectPanel({ config, onGenerate })
-// - 面板 HTML/CSS 注入、tab 切换、折叠、拖拽
-// - 设置表单生成与事件绑定（配置修改、字体上传、导入导出）
-// - "重新排版本试卷"按钮 → 回调 onGenerate(jsonText)
+// 悬浮面板 UI（内容脚本侧）
 // ============================================================
 
-import { saveConfig, defaultConfig, deepMerge } from './config.js';
+import { saveConfig } from './config.js';
 import { getAllFontOptions, saveCustomFont, readFontFile } from './fonts.js';
 import { extractFromPage } from './extractor.js';
+import {
+  buildSettingsFormHTML,
+  applyFormValues,
+  attachSettingsFormHandlers,
+} from './settings-form.js';
 
 const PANEL_CSS = `
 .fb-panel {
@@ -51,14 +52,14 @@ const PANEL_CSS = `
 #fb-generate-btn, .fb-settings-actions button {
   width: 100%; padding: 8px 12px;
   background: #4f46e5; color: #fff; border: none; border-radius: 4px;
-  cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 0;
+  cursor: pointer; font-size: 14px; font-weight: bold;
 }
 #fb-generate-btn:hover, .fb-settings-actions button:hover { background: #4338ca; }
 .fb-settings-actions {
   display: flex; gap: 8px; padding: 10px 0;
   background: #fff; position: sticky; bottom: 0;
 }
-.fb-settings-actions button { margin-top: 0; background: #6b7280; }
+.fb-settings-actions button { background: #6b7280; }
 .fb-settings-actions button:hover { background: #4b5563; }
 .fb-form-group { margin-bottom: 10px; }
 .fb-form-group > label {
@@ -111,37 +112,25 @@ const PANEL_HTML = `
     </div>
     <div class="fb-tab-content" data-content="settings">
       <div class="fb-settings-scroll" id="fb-settings-scroll"></div>
-      <div class="fb-settings-actions">
-        <button id="fb-export-config">导出配置</button>
-        <button id="fb-import-config">导入配置</button>
-      </div>
     </div>
   </div>
 </div>
 `;
 
-/**
- * 注入面板。
- * @param {Object} opts
- *   - config: 配置对象（引用稳定，导入配置时原地修改）
- *   - onGenerate: (jsonText: string) => void
- */
 export function injectPanel(opts) {
   const { config, onGenerate } = opts;
 
-  // 1. 注入样式
   const styleEl = document.createElement('style');
   styleEl.textContent = PANEL_CSS;
   document.head.appendChild(styleEl);
 
-  // 2. 注入 DOM
   const wrap = document.createElement('div');
   wrap.innerHTML = PANEL_HTML;
   document.body.appendChild(wrap.firstElementChild);
 
   const panel = document.getElementById('fb-pdf-panel');
 
-  // 3. 拖拽
+  // 拖拽
   (function setupDrag() {
     const dragHandle = document.getElementById('fb-panel-drag');
     let dragging = false;
@@ -150,9 +139,7 @@ export function injectPanel(opts) {
     dragHandle.addEventListener('mousedown', (e) => {
       if (e.target.id === 'fb-panel-minimize') return;
       e.preventDefault();
-
       const rect = panel.getBoundingClientRect();
-      // 把 right 定位切换成 left 定位，方便拖拽计算
       panel.style.left = rect.left + 'px';
       panel.style.top = rect.top + 'px';
       panel.style.right = 'auto';
@@ -171,13 +158,11 @@ export function injectPanel(opts) {
       if (!dragging) return;
       let newLeft = startLeft + (e.clientX - startX);
       let newTop = startTop + (e.clientY - startY);
-
       const rect = panel.getBoundingClientRect();
       const maxLeft = window.innerWidth - rect.width;
       const maxTop = window.innerHeight - rect.height;
       newLeft = Math.max(0, Math.min(newLeft, maxLeft));
       newTop = Math.max(0, Math.min(newTop, maxTop));
-
       panel.style.left = newLeft + 'px';
       panel.style.top = newTop + 'px';
     });
@@ -190,7 +175,7 @@ export function injectPanel(opts) {
     });
   })();
 
-  // 4. 折叠
+  // 折叠
   let isMinimized = false;
   document.getElementById('fb-panel-minimize').addEventListener('click', () => {
     isMinimized = !isMinimized;
@@ -198,135 +183,33 @@ export function injectPanel(opts) {
     document.getElementById('fb-panel-minimize').textContent = isMinimized ? '+' : '—';
   });
 
-  // 5. tab 切换
+  // tab 切换
   document.querySelectorAll('.fb-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fb-tab').forEach((t) => t.classList.remove('active'));
       document.querySelectorAll('.fb-tab-content').forEach((c) => c.classList.remove('active'));
       tab.classList.add('active');
-      const target = document.querySelector(
-        `.fb-tab-content[data-content="${tab.dataset.tab}"]`
-      );
+      const target = document.querySelector(`.fb-tab-content[data-content="${tab.dataset.tab}"]`);
       if (target) target.classList.add('active');
     });
   });
 
-  // 6. 设置表单
+  // 设置表单
   const settingsScroll = document.getElementById('fb-settings-scroll');
 
-  function buildSettingsForm() {
-    const s = config.settings[config.activePageSize];
-    const ps = config.activePageSize;
-    const fo = getAllFontOptions()
-      .map((f) => `<option value="${f.value}">${f.label}</option>`)
-      .join('');
-
-    settingsScroll.innerHTML = `
-      <div class="fb-form-group">
-        <label>页面大小</label>
-        <select data-cfg="activePageSize">
-          <option value="A4" ${ps === 'A4' ? 'selected' : ''}>A4 (210 × 297 mm)</option>
-          <option value="B5" ${ps === 'B5' ? 'selected' : ''}>B5 (176 × 250 mm)</option>
-        </select>
-      </div>
-      <details open>
-        <summary>页面边距 (mm)</summary>
-        <div class="fb-margin-row">
-          <div class="fb-form-group"><label>上</label><input type="number" data-cfg="marginTop" min="0" max="60" step="1"></div>
-          <div class="fb-form-group"><label>左</label><input type="number" data-cfg="marginLeft" min="0" max="60" step="1"></div>
-          <div class="fb-form-group"><label>右</label><input type="number" data-cfg="marginRight" min="0" max="60" step="1"></div>
-          <div class="fb-form-group"><label>页脚距纸张底边</label><input type="number" data-cfg="footerGap" min="0" max="60" step="1"></div>
-        </div>
-        <div class="fb-form-group"><label>页脚上边距 (mm) —— 正文停靠线到页脚顶边的距离</label>
-          <input type="number" data-cfg="footerTopMargin" min="0" max="60" step="1">
-        </div>
-        <p style="font-size:11px;color:#6b7280;margin:4px 0 0 0;">正文停靠线 = 页脚距纸张底边 + 页脚高度 + 页脚上边距</p>
-      </details>
-      <details open>
-        <summary>分页</summary>
-        <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="keepQuestionTogether">题目不跨页（整题放不下则整题到下一页）</label></div>
-      </details>
-      <details open>
-        <summary>正文（题干与选项）</summary>
-        <div class="fb-form-group"><label>字体</label>
-          <div class="fb-row"><select data-cfg="bodyFont">${fo}</select><button class="fb-mini-btn" data-upload-font="bodyFont">上传</button></div>
-        </div>
-        <div class="fb-form-group"><label>字号 (pt)</label><input type="number" data-cfg="bodyFontSize" min="6" max="36" step="0.5"></div>
-        <div class="fb-form-group"><label>行距</label><input type="number" data-cfg="bodyLineHeight" min="1" max="3" step="0.1"></div>
-        <div class="fb-form-group"><label>段间距 (em)</label><input type="number" data-cfg="paraSpacing" min="0" max="3" step="0.1"></div>
-      </details>
-      <details open>
-        <summary>间距</summary>
-        <div class="fb-form-group"><label>题干与选项距离 (px)</label><input type="number" data-cfg="stemOptionGap" min="0" max="50" step="1"></div>
-        <div class="fb-form-group"><label>题与题距离 (px)</label><input type="number" data-cfg="questionGap" min="0" max="50" step="1"></div>
-      </details>
-      <details>
-        <summary>模块</summary>
-        <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="chapterPageBreak">每个模块开始前分页（第一个除外）</label></div>
-        <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="chapterShowPartIndex">显示科目序号（自动加"第X部分"）</label></div>
-        <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="chapterCenterAlign">模块名称居中</label></div>
-        <div class="fb-form-group"><label>模块名称字体</label>
-          <div class="fb-row"><select data-cfg="chapterNameFont">${fo}</select><button class="fb-mini-btn" data-upload-font="chapterNameFont">上传</button></div>
-        </div>
-        <div class="fb-form-group"><label>模块名称字号 (pt)</label><input type="number" data-cfg="chapterNameSize" min="6" max="36" step="0.5"></div>
-        <div class="fb-form-group"><label>模块名称下边距 (px)</label><input type="number" data-cfg="chapterNameMarginBottom" min="0" max="50" step="1"></div>
-        <div class="fb-form-group"><label>模块描述字体</label>
-          <div class="fb-row"><select data-cfg="chapterDescFont">${fo}</select><button class="fb-mini-btn" data-upload-font="chapterDescFont">上传</button></div>
-        </div>
-        <div class="fb-form-group"><label>模块描述字号 (pt)</label><input type="number" data-cfg="chapterDescSize" min="6" max="36" step="0.5"></div>
-        <div class="fb-form-group"><label>模块描述下边距 (px)</label><input type="number" data-cfg="chapterDescMarginBottom" min="0" max="50" step="1"></div>
-      </details>
-      <details>
-        <summary>材料</summary>
-        <div class="fb-form-group"><label>字体</label>
-          <div class="fb-row"><select data-cfg="materialFont">${fo}</select><button class="fb-mini-btn" data-upload-font="materialFont">上传</button></div>
-        </div>
-        <div class="fb-form-group"><label>字号 (pt)</label><input type="number" data-cfg="materialSize" min="6" max="36" step="0.5"></div>
-        <div class="fb-form-group"><label>行距</label><input type="number" data-cfg="materialLineHeight" min="1" max="3" step="0.1"></div>
-        <div class="fb-form-group"><label>段间距 (px)</label><input type="number" data-cfg="materialParaSpacing" min="0" max="50" step="1"></div>
-        <div class="fb-form-group"><label>下边距 (px)</label><input type="number" data-cfg="materialMarginBottom" min="0" max="50" step="1"></div>
-      </details>
-      <details>
-        <summary>开发者模式</summary>
-        <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="circleNumBlock">圆圈序号段落独立成块（①②③ 相邻段落不可切分）</label></div>
-      </details>
-    `;
-
-    settingsScroll.querySelectorAll('[data-cfg]').forEach((el) => {
-      const k = el.dataset.cfg;
-      if (k === 'activePageSize') {
-        el.value = config.activePageSize;
-        return;
-      }
-      if (el.type === 'checkbox') el.checked = !!s[k];
-      else el.value = s[k];
+  function rebuildSettingsForm() {
+    settingsScroll.innerHTML = buildSettingsFormHTML(getAllFontOptions(), config);
+    applyFormValues(settingsScroll, config);
+    attachSettingsFormHandlers({
+      root: settingsScroll,
+      config,
+      onChange: async (k, v, meta) => {
+        await saveConfig();
+        if (meta.isPageSize) rebuildSettingsForm();
+      },
     });
   }
 
-  // 7. 表单变更
-  settingsScroll.addEventListener('change', async (e) => {
-    const el = e.target;
-    const k = el.dataset.cfg;
-    if (!k) return;
-
-    if (k === 'activePageSize') {
-      config.activePageSize = el.value;
-      await saveConfig();
-      buildSettingsForm();
-      return;
-    }
-
-    const ps = config.activePageSize;
-    let v;
-    if (el.type === 'checkbox') v = el.checked;
-    else if (el.type === 'number') v = parseFloat(el.value);
-    else v = el.value;
-    if (Number.isNaN(v)) return;
-    config.settings[ps][k] = v;
-    await saveConfig();
-  });
-
-  // 8. 字体上传
   settingsScroll.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-upload-font]');
     if (!btn) return;
@@ -343,7 +226,7 @@ export function injectPanel(opts) {
         await saveCustomFont(name, dataUrl);
         config.settings[config.activePageSize][key] = name;
         await saveConfig();
-        buildSettingsForm();
+        rebuildSettingsForm();
       } catch (err) {
         alert('字体保存失败：' + err.message);
       }
@@ -351,7 +234,9 @@ export function injectPanel(opts) {
     inp.click();
   });
 
-  // 9. 生成按钮
+  rebuildSettingsForm();
+
+  // 生成按钮
   document.getElementById('fb-generate-btn').addEventListener('click', () => {
     let data;
     try {
@@ -369,78 +254,5 @@ export function injectPanel(opts) {
     onGenerate(JSON.stringify(data));
   });
 
-  // 10. 导出配置
-  document.getElementById('fb-export-config').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'fenbi-pdf-config.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  // 11. 导入配置
-  document.getElementById('fb-import-config').addEventListener('click', () => {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = '.json';
-    inp.onchange = async () => {
-      const file = inp.files[0];
-      if (!file) return;
-      let imported;
-      try {
-        imported = JSON.parse(await file.text());
-      } catch (err) {
-        alert('配置文件格式错误：' + err.message);
-        return;
-      }
-      const mode = await showImportDialog();
-      if (mode === 'cancel') return;
-
-      const newCfg = deepMerge(defaultConfig(), imported);
-      for (const k in config) delete config[k];
-      Object.assign(config, newCfg);
-
-      if (mode === 'overwrite') await saveConfig();
-      buildSettingsForm();
-      alert('配置已应用。');
-    };
-    inp.click();
-  });
-
-  buildSettingsForm();
-
-  return {
-    rebuildSettingsForm: buildSettingsForm,
-  };
-}
-
-// ============================================================
-// 导入配置时的三选一对话框
-// ============================================================
-function showImportDialog() {
-  return new Promise((resolve) => {
-    const d = document.createElement('div');
-    d.innerHTML = `
-      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999999;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;">
-        <div style="background:#fff;padding:20px 24px;border-radius:10px;max-width:380px;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
-          <h3 style="margin:0 0 8px;font-size:16px;">导入配置</h3>
-          <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">请选择导入方式：</p>
-          <div style="display:flex;gap:10px;flex-direction:column;">
-            <button data-mode="once" style="padding:10px;background:#4f46e5;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">仅本次使用</button>
-            <button data-mode="overwrite" style="padding:10px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">覆盖习惯设置（永久保存）</button>
-            <button data-mode="cancel" style="padding:10px;background:#e5e7eb;color:#333;border:none;border-radius:6px;cursor:pointer;font-size:14px;">取消</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(d);
-    d.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-mode]');
-      if (b) {
-        document.body.removeChild(d);
-        resolve(b.dataset.mode);
-      }
-    });
-  });
+  return { rebuildSettingsForm };
 }

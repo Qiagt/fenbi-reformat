@@ -1,13 +1,13 @@
 // ============================================================
-// 预览页内嵌脚本（字符串常量）
-// 必须保持字符串形式：pagination.js 通过 ${PREVIEW_SCRIPT} 拼进 <script>
+// 分页引擎（模块函数版）
+// - runPagination({ settings, page, bodyFF })
+// - 页面里需已存在：#fb-measure、#fb-staging、#fb-output
 // ============================================================
 
-export const PREVIEW_SCRIPT = `
-(function () {
-  var SETTINGS = window.__FB_SETTINGS__;
-  var PAGE = window.__FB_PAGE__;
-  var BODY_FF = window.__FB_BODY_FONT__;
+export function runPagination(deps) {
+  var SETTINGS = deps.settings;
+  var PAGE = deps.page;
+  var BODY_FF = deps.bodyFF;
 
   var mmCache = null;
   function mmToPx(mm) {
@@ -395,7 +395,6 @@ export const PREVIEW_SCRIPT = `
         curPage.content.appendChild(fpClone);
         void curPage.content.offsetHeight;
 
-        // 封面需要放开内容区的 overflow，让装订线能画到内容区左侧外
         if (fpClone.querySelector('.fb-cover')) {
           curPage.content.style.overflow = 'visible';
         }
@@ -536,18 +535,20 @@ export const PREVIEW_SCRIPT = `
     });
   }
 
-  waitForAssets().then(function () {
+  return waitForAssets().then(function () {
     applyAdaptiveGrid();
-    requestAnimationFrame(function () {
+    return new Promise(function (resolve) {
       requestAnimationFrame(function () {
-        try { paginate(); }
-        catch (e) {
-          console.error('[fenbi-pdf] 分页失败：', e);
-          var out = document.getElementById('fb-output');
-          if (out) out.innerHTML = '<pre>' + (e.stack || e.message) + '</pre>';
-        }
+        requestAnimationFrame(function () {
+          try { paginate(); }
+          catch (e) {
+            console.error('[fenbi-pdf] 分页失败：', e);
+            var out = document.getElementById('fb-output');
+            if (out) out.innerHTML = '<pre>' + (e.stack || e.message) + '</pre>';
+          }
+          resolve();
+        });
       });
     });
   });
-})();
-`;
+}
