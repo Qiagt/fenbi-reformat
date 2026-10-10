@@ -33,13 +33,22 @@ export function buildCSS(settings, pageSize, pageSizes) {
 
   const sealNameWidthMm = (2 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
   const sealIdWidthMm   = (4 * sealFontSize * 0.3528 + 0.4 * sealFontSize * 0.3528 + 30).toFixed(2);
-
-  const imgInlineOptionMH   = settings.imgInlineOptionMinHeight   != null ? settings.imgInlineOptionMinHeight   : 0.5;
-  const imgInlineStemMH     = settings.imgInlineStemMinHeight     != null ? settings.imgInlineStemMinHeight     : 1;
-  const imgInlineMaterialMH = settings.imgInlineMaterialMinHeight != null ? settings.imgInlineMaterialMinHeight : 4;
-  const imgStandaloneOptionMH   = settings.imgStandaloneOptionMinHeight   != null ? settings.imgStandaloneOptionMinHeight   : 2;
-  const imgStandaloneStemMH     = settings.imgStandaloneStemMinHeight     != null ? settings.imgStandaloneStemMinHeight     : 4;
-  const imgStandaloneMaterialMH = settings.imgStandaloneMaterialMinHeight != null ? settings.imgStandaloneMaterialMinHeight : 4;
+  const g = (k, d) => {
+    const v = settings[k];
+    return (v != null && !Number.isNaN(v)) ? v : d;
+  };
+  const imgStandaloneOptionMinH   = g('imgStandaloneOptionMinHeight', 0);
+  const imgStandaloneOptionMaxH   = g('imgStandaloneOptionMaxHeight', 2);
+  const imgStandaloneStemMinH     = g('imgStandaloneStemMinHeight', 0);
+  const imgStandaloneStemMaxH     = g('imgStandaloneStemMaxHeight', 4);
+  const imgStandaloneMaterialMinH = g('imgStandaloneMaterialMinHeight', 0);
+  const imgStandaloneMaterialMaxH = g('imgStandaloneMaterialMaxHeight', 4);
+  const imgInlineOptionMinH   = g('imgInlineOptionMinHeight', 0);
+  const imgInlineOptionMaxH   = g('imgInlineOptionMaxHeight', 1);
+  const imgInlineStemMinH     = g('imgInlineStemMinHeight', 0);
+  const imgInlineStemMaxH     = g('imgInlineStemMaxHeight', 1);
+  const imgInlineMaterialMinH = g('imgInlineMaterialMinHeight', 0);
+  const imgInlineMaterialMaxH = g('imgInlineMaterialMaxHeight', 4);
 
   return `
 ${fontFaces}
@@ -177,48 +186,51 @@ html, body {
 .fb-option-content { flex: 1; min-width: 0; text-align: left; word-break: break-word; }
 
 /* ============ 图片 ============ */
-/* 独立图 */
 .fb-img-standalone-stem {
-  max-height: 4cm;
+  max-height: ${imgStandaloneStemMaxH}cm;
+  min-height: ${imgStandaloneStemMinH}cm;
   width: auto;
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneStemMH}cm;
 }
 .fb-img-standalone-option {
-  max-height: 2cm;
+  max-height: ${imgStandaloneOptionMaxH}cm;
+  min-height: ${imgStandaloneOptionMinH}cm;
   max-width: 100%;
   width: auto;
   display: block;
   margin: 5px 0;
   object-fit: contain;
-  min-height: ${imgStandaloneOptionMH}cm;
 }
 .fb-img-standalone-material {
-  max-height: 4cm;
+  max-height: ${imgStandaloneMaterialMaxH}cm;
+  min-height: ${imgStandaloneMaterialMinH}cm;
   width: auto;
   display: block;
   margin: 5px auto;
   object-fit: contain;
-  min-height: ${imgStandaloneMaterialMH}cm;
 }
-
-/* 行内图 */
-.fb-img-inline {
-  max-height: 1cm;
+img.fb-img-inline[data-img-context="stem"] {
+  max-height: ${imgInlineStemMaxH}cm;
+  min-height: ${imgInlineStemMinH}cm;
   width: auto;
   vertical-align: middle;
   margin: 0 2px;
 }
-img.fb-img-inline[data-img-context="stem"] {
-  min-height: ${imgInlineStemMH}cm;
-}
 img.fb-img-inline[data-img-context="option"] {
-  min-height: ${imgInlineOptionMH}cm;
+  max-height: ${imgInlineOptionMaxH}cm;
+  min-height: ${imgInlineOptionMinH}cm;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 2px;
 }
 img.fb-img-inline[data-img-context="material"] {
-  min-height: ${imgInlineMaterialMH}cm;
+  max-height: ${imgInlineMaterialMaxH}cm;
+  min-height: ${imgInlineMaterialMinH}cm;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 2px;
 }
 .fb-blank {
   text-decoration: underline;

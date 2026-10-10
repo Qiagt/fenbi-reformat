@@ -348,7 +348,7 @@ export function runPagination(deps) {
     });
 
     var queue;
-    var needGroup = SETTINGS.keepQuestionTogether || mode === 'whole';
+    var needGroup = mode === 'whole';
     if (needGroup) {
       queue = [];
       var qi = 0;

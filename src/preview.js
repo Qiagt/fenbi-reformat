@@ -5,7 +5,7 @@
 import { runPagination } from './preview-inject.js';
 import { buildPreviewSidebar } from './preview-sidebar.js';
 import { loadConfig, getConfig, saveConfig, defaultConfig, deepMerge } from './config.js';
-import { getAllFontOptions, saveCustomFont, readFontFile } from './fonts.js';
+import { saveCustomFont, readFontFile, fontFamilyString } from './fonts.js';
 import { buildCSS } from './styles.js';
 import {
   resetOverrides,
@@ -38,7 +38,6 @@ import {
 
   document.body.innerHTML = payload.bodyHTML;
 
-  // 打印按钮
   const printBtn = document.getElementById('fb-print-btn');
   if (printBtn) {
     printBtn.addEventListener('click', () => window.print());
@@ -47,6 +46,17 @@ import {
   await loadConfig();
   const config = getConfig();
   resetOverrides();
+
+  function syncMeasureStyle() {
+    const s = config.settings[config.activePageSize];
+    const ps = config.pageSizes[config.activePageSize];
+    const measure = document.getElementById('fb-measure');
+    if (!measure) return;
+    measure.style.width = (ps.width - s.marginLeft - s.marginRight) + 'mm';
+    measure.style.fontSize = s.bodyFontSize + 'pt';
+    measure.style.lineHeight = s.bodyLineHeight;
+    measure.style.fontFamily = fontFamilyString(s.bodyFont);
+  }
 
   function rebuildAllCSS() {
     const settings = config.settings[config.activePageSize];
@@ -70,7 +80,9 @@ import {
     const measure = document.getElementById('fb-measure');
     if (!output || !staging || !measure) return;
 
-    // ★ 关键：把 #fb-measure 重置回原始状态（消除上一轮 explode 的污染）
+    // ★ 同步测量容器的宽度和字体样式
+    syncMeasureStyle();
+
     measure.innerHTML = payload.blocksHTML;
 
     output.innerHTML = '';
@@ -79,10 +91,14 @@ import {
     rebuildAllCSS();
     void measure.offsetHeight;
 
+    const s = config.settings[config.activePageSize];
+    const ps = config.pageSizes[config.activePageSize];
+    const bodyFF = fontFamilyString(s.bodyFont);
+
     runPagination({
-      settings: config.settings[config.activePageSize],
-      page: config.pageSizes[config.activePageSize],
-      bodyFF: payload.bodyFF,
+      settings: s,
+      page: ps,
+      bodyFF,
     }).then(() => {
       if (anchor) {
         const newPages = document.querySelectorAll('#fb-output .fb-page');
@@ -113,13 +129,12 @@ import {
 
   const sidebar = buildPreviewSidebar({
     config,
-    fontOptions: getAllFontOptions(),
     onChange: debounce(() => {
       saveConfig();
       rerender();
     }, 500),
     onUploadFont: async (fontKey, file) => {
-      const name = file.name.replace(/\.[^.]+$/, '');
+      const name = (file.name || '').replace(/\.[^.]+$/, '').trim() || `Font-${Date.now()}`;
       const dataUrl = await readFontFile(file);
       await saveCustomFont(name, dataUrl);
       config.settings[config.activePageSize][fontKey] = name;
