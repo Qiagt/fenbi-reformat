@@ -8,6 +8,7 @@ import {
   attachSettingsFormHandlers,
 } from './settings-form.js';
 import { getOverride as getOverrideForSidebar } from './image-overrides.js';
+import { getAllFontOptions } from './fonts.js';
 
 const SIDEBAR_CSS = `
 .fb-sidebar {
@@ -65,7 +66,6 @@ const SIDEBAR_CSS = `
 }
 .fb-sidebar.collapsed ~ .fb-sidebar-handle { display: flex; }
 
-/* ---- 表单：左标签 右输入 ---- */
 .fb-sidebar .fb-form-group {
   display: grid;
   grid-template-columns: 130px 1fr;
@@ -141,7 +141,6 @@ const SIDEBAR_CSS = `
   margin-bottom: 3px;
 }
 
-/* ---- details ---- */
 .fb-sidebar details {
   border: 1px solid #d0d7de;
   border-radius: 6px;
@@ -183,7 +182,7 @@ body.fb-sidebar-open #fb-output {
 `;
 
 export function buildPreviewSidebar(opts) {
-  const { config, fontOptions, onChange, onUploadFont, onExport, onImport,
+  const { config, onChange, onUploadFont, onExport, onImport,
     onImageOverrideChange } = opts;
 
   const styleEl = document.createElement('style');
@@ -217,7 +216,7 @@ export function buildPreviewSidebar(opts) {
   const handleBtn = document.getElementById('fb-sidebar-handle');
 
   function rebuildPageForm() {
-    pagePanel.innerHTML = buildSettingsFormHTML(fontOptions, config);
+    pagePanel.innerHTML = buildSettingsFormHTML(getAllFontOptions(), config);
     applyFormValues(pagePanel, config);
     attachSettingsFormHandlers({
       root: pagePanel,
@@ -275,6 +274,7 @@ export function buildPreviewSidebar(opts) {
 
     const rect = imgEl.getBoundingClientRect();
     const currentCm = (rect.height / (96 / 2.54)).toFixed(2);
+    const currentWCm = (rect.width / (96 / 2.54)).toFixed(2);
 
     imagePanel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -288,24 +288,33 @@ export function buildPreviewSidebar(opts) {
         <img src="${src}" style="max-width:100%;max-height:120px;display:block;margin:0 auto;object-fit:contain;">
       </div>
       <div style="font-size:11px;color:#57606a;margin-bottom:10px;">
-        原始: ${naturalW}×${naturalH}<br>当前显示高度: ${currentCm} cm
+        原始: ${naturalW}×${naturalH}<br>
+        当前显示: ${currentWCm} × ${currentCm} cm
       </div>
-      <div class="fb-form-group"><label>最大高度 (cm，留空 = 使用默认)</label>
-        <input type="number" id="fb-img-h-cm" min="0.1" step="0.1" placeholder="如 4">
+      <div class="fb-form-group"><label>最大高度 (cm)</label>
+        <input type="number" id="fb-img-h-cm" min="0.1" step="0.1" placeholder="留空 = 使用默认">
+      </div>
+      <div class="fb-form-group"><label>最大宽度 (cm)</label>
+        <input type="number" id="fb-img-w-cm" min="0.1" step="0.1" placeholder="留空 = auto">
       </div>
       <p style="font-size:11px;color:#8b949e;margin-top:6px;line-height:1.5;">
-        只改图片的最大高度上限，宽度仍按原规则自适应。
+        只针对这张图。留空则使用全局默认。
       </p>
     `;
 
     const hInput = imagePanel.querySelector('#fb-img-h-cm');
+    const wInput = imagePanel.querySelector('#fb-img-w-cm');
     const cur = getOverrideForSidebar(imgId);
     if (cur && cur.maxHeightCm != null) hInput.value = cur.maxHeightCm;
+    if (cur && cur.maxWidthCm != null) wInput.value = cur.maxWidthCm;
 
-    hInput.addEventListener('input', () => {
-      const v = hInput.value ? parseFloat(hInput.value) : null;
-      onImageOverrideChange(imgId, { maxHeightCm: v });
-    });
+    function fire() {
+      const h = hInput.value ? parseFloat(hInput.value) : null;
+      const w = wInput.value ? parseFloat(wInput.value) : null;
+      onImageOverrideChange(imgId, { maxHeightCm: h, maxWidthCm: w });
+    }
+    hInput.addEventListener('input', fire);
+    wInput.addEventListener('input', fire);
 
     imagePanel.querySelector('#fb-img-close').addEventListener('click', clearImagePanel);
   }

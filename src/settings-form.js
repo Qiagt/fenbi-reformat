@@ -1,5 +1,6 @@
 // ============================================================
 // 设置表单（共享模块）
+// 分组：题目 / 模块与材料 / 偏好设置
 // ============================================================
 
 export function buildSettingsFormHTML(fontOptions, config) {
@@ -77,20 +78,34 @@ export function buildSettingsFormHTML(fontOptions, config) {
         <input type="number" data-cfg="footerTopMargin" min="0" max="60" step="1">
       </div>
 
-      <div class="fb-form-group"><label class="fb-checkbox"><input type="checkbox" data-cfg="circleNumBlock">圆圈序号段落独立成块</label></div>
-
       <details>
-        <summary>行内图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgInlineOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgInlineStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgInlineMaterialMinHeight" min="0" max="20" step="0.1"></div>
+        <summary>独立图片高度 (cm)</summary>
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">选项</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneOptionMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneOptionMaxHeight" min="0" max="30" step="0.1"></div>
+
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">题干</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneStemMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneStemMaxHeight" min="0" max="30" step="0.1"></div>
+
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">材料</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneMaterialMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneMaterialMaxHeight" min="0" max="30" step="0.1"></div>
       </details>
 
       <details>
-        <summary>独立图片最小高度 (cm)</summary>
-        <div class="fb-form-group"><label>选项</label><input type="number" data-cfg="imgStandaloneOptionMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>题干</label><input type="number" data-cfg="imgStandaloneStemMinHeight" min="0" max="20" step="0.1"></div>
-        <div class="fb-form-group"><label>材料</label><input type="number" data-cfg="imgStandaloneMaterialMinHeight" min="0" max="20" step="0.1"></div>
+        <summary>行内图片高度 (cm)</summary>
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">选项</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineOptionMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineOptionMaxHeight" min="0" max="30" step="0.1"></div>
+
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">题干</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineStemMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineStemMaxHeight" min="0" max="30" step="0.1"></div>
+
+        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">材料</div>
+        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineMaterialMinHeight" min="0" max="30" step="0.1"></div>
+        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineMaterialMaxHeight" min="0" max="30" step="0.1"></div>
       </details>
     </details>
   `;
@@ -131,6 +146,25 @@ export function attachSettingsFormHandlers(opts) {
 
     const v = readValue(el);
     if (typeof v === 'number' && Number.isNaN(v)) return;
+
+    // 图片 min/max 校验
+    if (k.endsWith('MinHeight') || k.endsWith('MaxHeight')) {
+      const pairKey = k.endsWith('MinHeight')
+        ? k.replace(/MinHeight$/, 'MaxHeight')
+        : k.replace(/MaxHeight$/, 'MinHeight');
+      const minKey = k.endsWith('MinHeight') ? k : pairKey;
+      const maxKey = k.endsWith('MaxHeight') ? k : pairKey;
+
+      const minV = k === minKey ? v : config.settings[config.activePageSize][minKey];
+      const maxV = k === maxKey ? v : config.settings[config.activePageSize][maxKey];
+
+      if (minV != null && maxV != null && minV > maxV) {
+        alert('最大高度不能小于最小高度');
+        el.value = config.settings[config.activePageSize][k];
+        return;
+      }
+    }
+
     config.settings[config.activePageSize][k] = v;
     onChange(k, v, { isPageSize: false });
   }

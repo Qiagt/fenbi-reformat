@@ -27,22 +27,6 @@ export function toChineseNum(n) {
   return String(n);
 }
 
-export function isCircleNumPara(arr) {
-  if (!Array.isArray(arr)) return false;
-  for (let i = 0; i < arr.length; i++) {
-    const el = arr[i];
-    if (typeof el === 'string') {
-      const t = el.replace(/^\s+/, '');
-      if (t.length > 0) {
-        return /[\u2460-\u2473]/.test(t.charAt(0));
-      }
-    } else {
-      return false;
-    }
-  }
-  return false;
-}
-
 export function parseContentToHTML(arr, type) {
   if (!Array.isArray(arr)) return '';
   const single = arr.length === 1 && typeof arr[0] === 'object' && arr[0].img;
@@ -68,6 +52,7 @@ export function parseContentToHTML(arr, type) {
   }
   return html;
 }
+
 export function buildBlocks(data, settings, extras) {
   const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   const s = settings;
@@ -120,19 +105,12 @@ export function buildBlocks(data, settings, extras) {
 
       if (mode === 'fine') {
         // 精细：每段一块，块内可切
-        const circleFlags = s.circleNumBlock ? paras.map(isCircleNumPara) : [];
-        for (let mi = 0; mi < paras.length; mi++) {
-          let noSlice = false;
-          if (s.circleNumBlock && circleFlags[mi]) {
-            noSlice =
-              (mi > 0 && circleFlags[mi - 1]) ||
-              (mi < circleFlags.length - 1 && circleFlags[mi + 1]);
-          }
+        for (const p of paras) {
           blocks.push({
-            html: `<div class="fb-material"><div class="fb-material-paragraph">${parseContentToHTML(paras[mi], 'material')}</div></div>`,
+            html: `<div class="fb-material"><div class="fb-material-paragraph">${parseContentToHTML(p, 'material')}</div></div>`,
             isChapter: false,
             qGroup: null,
-            sliceable: !noSlice,
+            sliceable: true,
           });
         }
       } else {
@@ -227,23 +205,11 @@ export function buildBlocks(data, settings, extras) {
       }
 
       // ---------- fine：题干分段 + 选项块，块内可切 ----------
-      const stemCircleFlags = s.circleNumBlock
-        ? item.stem.map(isCircleNumPara)
-        : [];
-
-      const stemNoSlice = (i) => {
-        if (!s.circleNumBlock || !stemCircleFlags[i]) return false;
-        return (
-          (i > 0 && stemCircleFlags[i - 1]) ||
-          (i < stemCircleFlags.length - 1 && stemCircleFlags[i + 1])
-        );
-      };
-
       blocks.push({
         html: `<div class="fb-question-stem"><span class="fb-q-num">${qNum}.</span><div class="fb-stem-content"><div class="fb-stem-first">${typeLabel}${stemParts[0] || ''}</div></div></div>`,
         qGroup: qNum,
         isChapter: false,
-        sliceable: !stemNoSlice(0),
+        sliceable: true,
         hasQNum: true,
       });
 
@@ -252,7 +218,7 @@ export function buildBlocks(data, settings, extras) {
           html: `<div class="fb-stem-continuation"><div class="fb-stem-content"><div class="fb-stem-paragraph">${stemParts[i]}</div></div></div>`,
           qGroup: qNum,
           isChapter: false,
-          sliceable: !stemNoSlice(i),
+          sliceable: true,
         });
       }
 

@@ -42,14 +42,21 @@ export function defaultSettings() {
     footerGap: 8,
     footerTopMargin: 6,
 
-    // ---- 图片最小高度 (cm，0 = 不限制) ----
-    imgInlineOptionMinHeight: null,
-    imgInlineStemMinHeight: null,
-    imgInlineMaterialMinHeight: null,
-    imgStandaloneOptionMinHeight: null,
-    imgStandaloneStemMinHeight: null,
-    imgStandaloneMaterialMinHeight: null,
-
+        // ---- 图片尺寸 (cm) ----
+    // 独立图
+    imgStandaloneOptionMinHeight: 0,
+    imgStandaloneOptionMaxHeight: 2,
+    imgStandaloneStemMinHeight: 0,
+    imgStandaloneStemMaxHeight: 4,
+    imgStandaloneMaterialMinHeight: 0,
+    imgStandaloneMaterialMaxHeight: 5,
+    // 行内图
+    imgInlineOptionMinHeight: 0,
+    imgInlineOptionMaxHeight: 1,
+    imgInlineStemMinHeight: 0,
+    imgInlineStemMaxHeight: 1,
+    imgInlineMaterialMinHeight: 0,
+    imgInlineMaterialMaxHeight: 4,
     // ---- 开发者 ----
     circleNumBlock: false,
   };

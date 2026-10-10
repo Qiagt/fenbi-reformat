@@ -36,6 +36,14 @@ const PANEL_CSS = `
   font-weight: 500;
   cursor: move; user-select: none;
 }
+.fb-panel-title-block {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0;
+}
+.fb-panel-title-author {
+  font-size: 11px; font-weight: 400;
+  opacity: .85;
+}
 .fb-panel-minimize {
   cursor: pointer; font-size: 14px; line-height: 1;
   padding: 0 4px; color: rgba(255,255,255,.7);
@@ -209,8 +217,10 @@ const _version = chrome.runtime.getManifest().version;
 const PANEL_HTML = `
 <div id="fb-pdf-panel" class="fb-panel">
   <div class="fb-panel-header" id="fb-panel-drag">
-    <span>Fenbi-ReFormator v${_version}版，免费开源\n</span>
-    <span>作者：小红书@YuZhongpro</span>
+    <div class="fb-panel-title-block">
+      <span>Fenbi-ReFormator v${_version}版，免费开源</span>
+      <span class="fb-panel-title-author">作者：小红书@YuZhongpro</span>
+    </div>
     <span class="fb-panel-minimize" id="fb-panel-minimize">—</span>
   </div>
   <div class="fb-panel-tabs">
@@ -327,7 +337,7 @@ export function injectPanel(opts) {
     inp.onchange = async () => {
       const file = inp.files[0];
       if (!file) return;
-      const name = file.name.replace(/\.[^.]+$/, '');
+      const name = (file.name || '').replace(/\.[^.]+$/, '').trim() || `Font-${Date.now()}`;
       try {
         const dataUrl = await readFontFile(file);
         await saveCustomFont(name, dataUrl);
