@@ -58,6 +58,7 @@ export function buildPreviewPayload(jsonData, deps) {
     settings,
     page: { width: sz.width, height: sz.height },
     bodyFF,
+    jsonData,
   };
 }
 

@@ -31,7 +31,8 @@
     {
       "resources": [
         "src/*",
-        "static/*"
+        "static/*",
+        "default.json"
       ],
       "matches": [
         "https://*.fenbi.com/*",

@@ -1,0 +1,70 @@
+{
+  "activePageSize": "A4",
+  "pageSizes": {
+    "A4": { "width": 210, "height": 297 },
+    "B5": { "width": 176, "height": 250 }
+  },
+  "shared": {
+    "bodyFont": "FangSong",
+    "bodyFontSize": 12,
+    "bodyLineHeight": 1.5,
+    "paraSpacing": 0,
+    "stemOptionGap": 5,
+    "questionGap": 25,
+    "chapterPageBreak": false,
+    "chapterShowPartIndex": false,
+    "chapterCenterAlign": true,
+    "chapterNameFont": "SimHei",
+    "chapterNameSize": 16,
+    "chapterNameMarginBottom": 5,
+    "chapterDescFont": "SimHei",
+    "chapterDescSize": 12,
+    "chapterDescMarginBottom": 10,
+    "materialFont": "SimSun",
+    "materialSize": 12,
+    "materialLineHeight": 1.5,
+    "materialParaSpacing": 5,
+    "materialMarginBottom": 15,
+    "paginationMode": "fine",
+    "footerGap": 8,
+    "footerTopMargin": 6,
+    "imgStandaloneStemMinHeight": 0,
+    "imgStandaloneStemMaxHeight": 4,
+    "imgStandaloneStemMinWidth": 0,
+    "imgStandaloneStemMaxWidth": 16,
+    "imgStandaloneOptionMinHeight": 0,
+    "imgStandaloneOptionMaxHeight": 2,
+    "imgStandaloneOptionMinWidth": 0,
+    "imgStandaloneOptionMaxWidth": 16,
+    "imgStandaloneMaterialMinHeight": 0,
+    "imgStandaloneMaterialMaxHeight": 5,
+    "imgStandaloneMaterialMinWidth": 0,
+    "imgStandaloneMaterialMaxWidth": 16,
+    "imgInlineStemMinHeight": 0,
+    "imgInlineStemMaxHeight": 1,
+    "imgInlineStemMinWidth": 0,
+    "imgInlineStemMaxWidth": 6,
+    "imgInlineOptionMinHeight": 0,
+    "imgInlineOptionMaxHeight": 1,
+    "imgInlineOptionMinWidth": 0,
+    "imgInlineOptionMaxWidth": 6,
+    "imgInlineMaterialMinHeight": 0,
+    "imgInlineMaterialMaxHeight": 4,
+    "imgInlineMaterialMinWidth": 0,
+    "imgInlineMaterialMaxWidth": 12
+  },
+  "settings": {
+    "A4": {
+      "marginTop": 18,
+      "marginBottom": 18,
+      "marginLeft": 18,
+      "marginRight": 18
+    },
+    "B5": {
+      "marginTop": 12,
+      "marginBottom": 12,
+      "marginLeft": 12,
+      "marginRight": 12
+    }
+  }
+}

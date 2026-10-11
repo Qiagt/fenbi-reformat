@@ -3,17 +3,17 @@
 // ============================================================
 
 const CONFIG_KEY = 'fb-pdf-config';
+const DEFAULT_JSON = 'default.json';
 
 export function defaultSettings() {
   return {
     // ---- 题目 ----
-    bodyFont: 'FangSong_GB2312',
+    bodyFont: 'FangSong',
     bodyFontSize: 12,
     bodyLineHeight: 1.5,
     paraSpacing: 0,
     stemOptionGap: 5,
     questionGap: 25,
-    keepQuestionTogether: false,
 
     // ---- 模块 ----
     chapterPageBreak: false,
@@ -42,23 +42,34 @@ export function defaultSettings() {
     footerGap: 8,
     footerTopMargin: 6,
 
-        // ---- 图片尺寸 (cm) ----
+    // ---- 图片尺寸 (cm) ----
+    // 语义：0 = auto（不约束该维度）；正数 = 生效约束
     // 独立图
-    imgStandaloneOptionMinHeight: 0,
-    imgStandaloneOptionMaxHeight: 2,
     imgStandaloneStemMinHeight: 0,
     imgStandaloneStemMaxHeight: 4,
+    imgStandaloneStemMinWidth: 0,
+    imgStandaloneStemMaxWidth: 16,
+    imgStandaloneOptionMinHeight: 0,
+    imgStandaloneOptionMaxHeight: 2,
+    imgStandaloneOptionMinWidth: 0,
+    imgStandaloneOptionMaxWidth: 16,
     imgStandaloneMaterialMinHeight: 0,
     imgStandaloneMaterialMaxHeight: 5,
+    imgStandaloneMaterialMinWidth: 0,
+    imgStandaloneMaterialMaxWidth: 16,
     // 行内图
-    imgInlineOptionMinHeight: 0,
-    imgInlineOptionMaxHeight: 1,
     imgInlineStemMinHeight: 0,
     imgInlineStemMaxHeight: 1,
+    imgInlineStemMinWidth: 0,
+    imgInlineStemMaxWidth: 6,
+    imgInlineOptionMinHeight: 0,
+    imgInlineOptionMaxHeight: 1,
+    imgInlineOptionMinWidth: 0,
+    imgInlineOptionMaxWidth: 6,
     imgInlineMaterialMinHeight: 0,
     imgInlineMaterialMaxHeight: 4,
-    // ---- 开发者 ----
-    circleNumBlock: false,
+    imgInlineMaterialMinWidth: 0,
+    imgInlineMaterialMaxWidth: 12,
   };
 }
 
@@ -79,6 +90,7 @@ export function defaultConfig() {
 export function deepMerge(target, source) {
   const out = Array.isArray(target) ? [...target] : { ...target };
   for (const k in source) {
+    if (source[k] === undefined) continue;
     if (
       source[k] &&
       typeof source[k] === 'object' &&
@@ -95,17 +107,68 @@ export function deepMerge(target, source) {
   return out;
 }
 
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 let _config = null;
+let _packagedDefault = null;
+
+/**
+ * 读取扩展目录下的 default.json 当默认值。
+ * 支持两种写法：
+ *   1) { shared: {...}, settings: { A4: {...}, B5: {...} } }  —— shared 为公共字段
+ *   2) { settings: { A4: {...}, B5: {...} } }                 —— 直接写完整
+ * 缺字段一律用硬编码 defaultConfig() 兜底。
+ */
+async function loadPackagedDefault() {
+  if (_packagedDefault) return _packagedDefault;
+
+  const base = defaultConfig();
+  try {
+    const url = chrome.runtime.getURL(DEFAULT_JSON);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+
+    if (!raw || typeof raw !== 'object') {
+      _packagedDefault = base;
+      return _packagedDefault;
+    }
+
+    const shared = (raw.shared && typeof raw.shared === 'object') ? raw.shared : null;
+    const a4 = (raw.settings && raw.settings.A4) || {};
+    const b5 = (raw.settings && raw.settings.B5) || {};
+
+    const patch = {
+      activePageSize: raw.activePageSize,
+      pageSizes: raw.pageSizes,
+      settings: {
+        A4: shared ? { ...shared, ...a4 } : a4,
+        B5: shared ? { ...shared, ...b5 } : b5,
+      },
+    };
+
+    _packagedDefault = deepMerge(base, patch);
+  } catch (e) {
+    console.error('[fenbi-pdf] 读取 default.json 失败，使用硬编码默认值：', e);
+    _packagedDefault = base;
+  }
+  return _packagedDefault;
+}
 
 export async function loadConfig() {
   if (_config) return _config;
+  const packagedDefault = await loadPackagedDefault();
   try {
     const result = await chrome.storage.local.get(CONFIG_KEY);
     const stored = result[CONFIG_KEY];
-    _config = stored ? deepMerge(defaultConfig(), stored) : defaultConfig();
+    _config = stored
+      ? deepMerge(clone(packagedDefault), stored)
+      : clone(packagedDefault);
   } catch (e) {
     console.error('[fenbi-pdf] 配置加载失败，使用默认配置：', e);
-    _config = defaultConfig();
+    _config = clone(packagedDefault);
   }
   return _config;
 }
@@ -127,12 +190,24 @@ export async function saveConfig() {
 }
 
 export function replaceConfig(imported) {
-  _config = deepMerge(defaultConfig(), imported);
+  const packagedDefault = _packagedDefault || defaultConfig();
+  _config = deepMerge(clone(packagedDefault), imported);
   return _config;
 }
 
+/**
+ * 恢复默认：清空 storage，把 _config 原地覆盖为 packagedDefault。
+ * 原地修改以保证所有持有 getConfig() 引用的地方继续有效。
+ */
 export async function resetConfig() {
-  _config = defaultConfig();
+  const packagedDefault = await loadPackagedDefault();
+  const fresh = clone(packagedDefault);
+  if (_config) {
+    for (const k in _config) delete _config[k];
+    Object.assign(_config, fresh);
+  } else {
+    _config = fresh;
+  }
   try {
     await chrome.storage.local.remove(CONFIG_KEY);
   } catch (e) {

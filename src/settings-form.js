@@ -3,6 +3,146 @@
 // 分组：题目 / 模块与材料 / 偏好设置
 // ============================================================
 
+/**
+ * 图片 tab 相关的 CSS。由使用方拼接到自己的样式字符串后面。
+ * 类名统一带 fb-img- / fb-range- 前缀，避免冲突。
+ */
+export const SETTINGS_FORM_CSS = `
+.fb-img-kind-tabs,
+.fb-img-ctx-tabs {
+  display: flex;
+  margin: 0 8px;
+}
+.fb-img-kind-tabs { margin-top: 8px; }
+.fb-img-ctx-tabs { margin-top: 6px; }
+
+.fb-img-tab {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-right: none;
+  color: #57606a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fb-img-tab:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+.fb-img-tab:last-child {
+  border-right: 1px solid #d0d7de;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.fb-img-tab:hover { background: #eaeef2; }
+.fb-img-tab.active {
+  background: #40C463;
+  color: #fff;
+  border-color: #40C463;
+}
+.fb-img-tab.active + .fb-img-tab { border-left-color: #40C463; }
+
+.fb-img-panel {
+  margin: 8px 8px 0;
+}
+
+.fb-range-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto;
+  gap: 4px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+.fb-range-label {
+  font-size: 12px;
+  color: #57606a;
+  padding-bottom: 5px;
+  white-space: nowrap;
+}
+.fb-range-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fb-range-minmax {
+  font-size: 10px;
+  color: #8b949e;
+  line-height: 1;
+}
+.fb-range-cell input {
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 12px;
+  color: #1f2328;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.fb-range-cell input:focus {
+  border-color: #40C463;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(64,196,99,.2);
+}
+.fb-range-sep {
+  color: #8b949e;
+  padding-bottom: 5px;
+  font-size: 12px;
+}
+.fb-range-unit {
+  font-size: 11px;
+  color: #8b949e;
+  padding-bottom: 5px;
+}
+.fb-img-hint {
+  font-size: 11px;
+  color: #8b949e;
+  margin: 2px 0 10px;
+  line-height: 1.5;
+}
+`;
+
+function buildImgPanel(kind, ctx) {
+  const K = kind === 'standalone' ? 'Standalone' : 'Inline';
+  const C = ctx === 'stem' ? 'Stem' : ctx === 'option' ? 'Option' : 'Material';
+  const p = `img${K}${C}`;
+  return `
+    <div class="fb-img-panel" data-img-panel="${kind}-${ctx}" style="display:none;">
+      <div class="fb-range-row">
+        <span class="fb-range-label">高度</span>
+        <div class="fb-range-cell">
+          <span class="fb-range-minmax">最小</span>
+          <input type="number" min="0" max="40" step="0.1" data-cfg="${p}MinHeight">
+        </div>
+        <span class="fb-range-sep">~</span>
+        <div class="fb-range-cell">
+          <span class="fb-range-minmax">最大</span>
+          <input type="number" min="0" max="40" step="0.1" data-cfg="${p}MaxHeight">
+        </div>
+        <span class="fb-range-unit">cm</span>
+      </div>
+      <div class="fb-range-row">
+        <span class="fb-range-label">宽度</span>
+        <div class="fb-range-cell">
+          <span class="fb-range-minmax">最小</span>
+          <input type="number" min="0" max="40" step="0.1" data-cfg="${p}MinWidth">
+        </div>
+        <span class="fb-range-sep">~</span>
+        <div class="fb-range-cell">
+          <span class="fb-range-minmax">最大</span>
+          <input type="number" min="0" max="40" step="0.1" data-cfg="${p}MaxWidth">
+        </div>
+        <span class="fb-range-unit">cm</span>
+      </div>
+      <p class="fb-img-hint">0 = auto（不约束）</p>
+    </div>
+  `;
+}
+
 export function buildSettingsFormHTML(fontOptions, config) {
   const s = config.settings[config.activePageSize];
   const ps = config.activePageSize;
@@ -77,36 +217,25 @@ export function buildSettingsFormHTML(fontOptions, config) {
       <div class="fb-form-group"><label>页脚上边距 (mm)</label>
         <input type="number" data-cfg="footerTopMargin" min="0" max="60" step="1">
       </div>
+    </details>
 
-      <details>
-        <summary>独立图片高度 (cm)</summary>
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">选项</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneOptionMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneOptionMaxHeight" min="0" max="30" step="0.1"></div>
-
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">题干</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneStemMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneStemMaxHeight" min="0" max="30" step="0.1"></div>
-
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">材料</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgStandaloneMaterialMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgStandaloneMaterialMaxHeight" min="0" max="30" step="0.1"></div>
-      </details>
-
-      <details>
-        <summary>行内图片高度 (cm)</summary>
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">选项</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineOptionMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineOptionMaxHeight" min="0" max="30" step="0.1"></div>
-
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">题干</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineStemMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineStemMaxHeight" min="0" max="30" step="0.1"></div>
-
-        <div style="font-size:12px;color:#57606a;margin:8px 8px 4px;">材料</div>
-        <div class="fb-form-group"><label>最小</label><input type="number" data-cfg="imgInlineMaterialMinHeight" min="0" max="30" step="0.1"></div>
-        <div class="fb-form-group"><label>最大</label><input type="number" data-cfg="imgInlineMaterialMaxHeight" min="0" max="30" step="0.1"></div>
-      </details>
+    <details>
+      <summary>图片尺寸（全局）</summary>
+      <div class="fb-img-kind-tabs">
+        <button type="button" class="fb-img-tab active" data-img-kind="standalone">独立图</button>
+        <button type="button" class="fb-img-tab" data-img-kind="inline">行内图</button>
+      </div>
+      <div class="fb-img-ctx-tabs">
+        <button type="button" class="fb-img-tab active" data-img-ctx="stem">题干</button>
+        <button type="button" class="fb-img-tab" data-img-ctx="option">选项</button>
+        <button type="button" class="fb-img-tab" data-img-ctx="material">材料</button>
+      </div>
+      ${buildImgPanel('standalone', 'stem')}
+      ${buildImgPanel('standalone', 'option')}
+      ${buildImgPanel('standalone', 'material')}
+      ${buildImgPanel('inline', 'stem')}
+      ${buildImgPanel('inline', 'option')}
+      ${buildImgPanel('inline', 'material')}
     </details>
   `;
 }
@@ -122,6 +251,31 @@ export function applyFormValues(root, config) {
     if (el.type === 'checkbox') el.checked = !!s[k];
     else el.value = s[k];
   });
+}
+
+function setupImageTabs(root) {
+  const panels = root.querySelectorAll('[data-img-panel]');
+  if (panels.length === 0) return;
+  const kindBtns = root.querySelectorAll('[data-img-kind]');
+  const ctxBtns = root.querySelectorAll('[data-img-ctx]');
+  let curKind = 'standalone';
+  let curCtx = 'stem';
+
+  function refresh() {
+    kindBtns.forEach((b) => b.classList.toggle('active', b.dataset.imgKind === curKind));
+    ctxBtns.forEach((b) => b.classList.toggle('active', b.dataset.imgCtx === curCtx));
+    panels.forEach((p) => {
+      p.style.display = p.dataset.imgPanel === curKind + '-' + curCtx ? '' : 'none';
+    });
+  }
+
+  kindBtns.forEach((b) =>
+    b.addEventListener('click', () => { curKind = b.dataset.imgKind; refresh(); })
+  );
+  ctxBtns.forEach((b) =>
+    b.addEventListener('click', () => { curCtx = b.dataset.imgCtx; refresh(); })
+  );
+  refresh();
 }
 
 export function attachSettingsFormHandlers(opts) {
@@ -147,19 +301,19 @@ export function attachSettingsFormHandlers(opts) {
     const v = readValue(el);
     if (typeof v === 'number' && Number.isNaN(v)) return;
 
-    // 图片 min/max 校验
-    if (k.endsWith('MinHeight') || k.endsWith('MaxHeight')) {
-      const pairKey = k.endsWith('MinHeight')
-        ? k.replace(/MinHeight$/, 'MaxHeight')
-        : k.replace(/MaxHeight$/, 'MinHeight');
-      const minKey = k.endsWith('MinHeight') ? k : pairKey;
-      const maxKey = k.endsWith('MaxHeight') ? k : pairKey;
+    // 图片 min/max 校验（0 视为 auto，不参与比较）
+    if (k.endsWith('MinHeight') || k.endsWith('MaxHeight')
+      || k.endsWith('MinWidth') || k.endsWith('MaxWidth')) {
+      const isMin = k.endsWith('MinHeight') || k.endsWith('MinWidth');
+      const unit = k.endsWith('MinHeight') || k.endsWith('MaxHeight') ? 'Height' : 'Width';
+      const minKey = isMin ? k : k.replace(/Max(Height|Width)$/, 'Min$1');
+      const maxKey = isMin ? k.replace(/Min(Height|Width)$/, 'Max$1') : k;
 
       const minV = k === minKey ? v : config.settings[config.activePageSize][minKey];
       const maxV = k === maxKey ? v : config.settings[config.activePageSize][maxKey];
 
-      if (minV != null && maxV != null && minV > maxV) {
-        alert('最大高度不能小于最小高度');
+      if (minV > 0 && maxV > 0 && minV > maxV) {
+        alert('最大值不能小于最小值');
         el.value = config.settings[config.activePageSize][k];
         return;
       }
@@ -173,4 +327,6 @@ export function attachSettingsFormHandlers(opts) {
   root.addEventListener('input', (e) => {
     if (e.target.type === 'number') handle(e);
   });
+
+  setupImageTabs(root);
 }

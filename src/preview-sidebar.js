@@ -6,6 +6,7 @@ import {
   buildSettingsFormHTML,
   applyFormValues,
   attachSettingsFormHandlers,
+  SETTINGS_FORM_CSS,
 } from './settings-form.js';
 import { getOverride as getOverrideForSidebar } from './image-overrides.js';
 import { getAllFontOptions } from './fonts.js';
@@ -182,11 +183,11 @@ body.fb-sidebar-open #fb-output {
 `;
 
 export function buildPreviewSidebar(opts) {
-  const { config, onChange, onUploadFont, onExport, onImport,
+  const { config, onChange, onUploadFont, onExport, onImport, onReset,
     onImageOverrideChange } = opts;
 
   const styleEl = document.createElement('style');
-  styleEl.textContent = SIDEBAR_CSS;
+  styleEl.textContent = SIDEBAR_CSS + SETTINGS_FORM_CSS;
   document.head.appendChild(styleEl);
 
   const root = document.createElement('div');
@@ -199,9 +200,12 @@ export function buildPreviewSidebar(opts) {
       <div class="fb-sidebar-body" id="fb-sidebar-body">
         <div id="fb-sidebar-page-panel"></div>
         <div id="fb-sidebar-image-panel" style="display:none;"></div>
-        <div style="display:flex;gap:6px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding-top:8px;border-top:1px solid #eaeef2;">
-          <button class="fb-mini-btn" id="fb-sidebar-export" style="flex:1;">导出配置</button>
-          <button class="fb-mini-btn" id="fb-sidebar-import" style="flex:1;">导入配置</button>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding-top:8px;border-top:1px solid #eaeef2;">
+          <div style="display:flex;gap:6px;">
+            <button class="fb-mini-btn" id="fb-sidebar-export" style="flex:1;">导出配置</button>
+            <button class="fb-mini-btn" id="fb-sidebar-import" style="flex:1;">导入配置</button>
+          </div>
+          <button class="fb-mini-btn" id="fb-sidebar-reset" style="width:100%;">恢复默认</button>
         </div>
       </div>
     </div>
@@ -262,6 +266,7 @@ export function buildPreviewSidebar(opts) {
 
   document.getElementById('fb-sidebar-export').addEventListener('click', onExport);
   document.getElementById('fb-sidebar-import').addEventListener('click', onImport);
+  document.getElementById('fb-sidebar-reset').addEventListener('click', onReset);
 
   function setImagePanel(imgEl) {
     pagePanel.style.display = 'none';
@@ -291,30 +296,39 @@ export function buildPreviewSidebar(opts) {
         原始: ${naturalW}×${naturalH}<br>
         当前显示: ${currentWCm} × ${currentCm} cm
       </div>
-      <div class="fb-form-group"><label>最大高度 (cm)</label>
-        <input type="number" id="fb-img-h-cm" min="0.1" step="0.1" placeholder="留空 = 使用默认">
+      <div class="fb-form-group"><label>高度 (cm)</label>
+        <input type="number" id="fb-img-h-cm" min="0" step="0.1" placeholder="留空 = 用全局">
       </div>
-      <div class="fb-form-group"><label>最大宽度 (cm)</label>
-        <input type="number" id="fb-img-w-cm" min="0.1" step="0.1" placeholder="留空 = auto">
+      <div class="fb-form-group"><label>宽度 (cm)</label>
+        <input type="number" id="fb-img-w-cm" min="0" step="0.1" placeholder="留空 = 用全局">
       </div>
       <p style="font-size:11px;color:#8b949e;margin-top:6px;line-height:1.5;">
-        只针对这张图。留空则使用全局默认。
+        填 0 = auto（自然尺寸）；填数字 = 固定；留空 = 回落全局。<br>
+        指定任一维度即完全接管本图，全局约束失效。
       </p>
+      <button class="fb-mini-btn" id="fb-img-reset" style="width:100%;margin-top:6px;">重置本图</button>
     `;
 
     const hInput = imagePanel.querySelector('#fb-img-h-cm');
     const wInput = imagePanel.querySelector('#fb-img-w-cm');
     const cur = getOverrideForSidebar(imgId);
-    if (cur && cur.maxHeightCm != null) hInput.value = cur.maxHeightCm;
-    if (cur && cur.maxWidthCm != null) wInput.value = cur.maxWidthCm;
+    if (cur && cur.heightCm != null) hInput.value = cur.heightCm;
+    if (cur && cur.widthCm != null) wInput.value = cur.widthCm;
 
     function fire() {
-      const h = hInput.value ? parseFloat(hInput.value) : null;
-      const w = wInput.value ? parseFloat(wInput.value) : null;
-      onImageOverrideChange(imgId, { maxHeightCm: h, maxWidthCm: w });
+      const h = hInput.value === '' ? null : parseFloat(hInput.value);
+      const w = wInput.value === '' ? null : parseFloat(wInput.value);
+      if (Number.isNaN(h) || Number.isNaN(w)) return;
+      onImageOverrideChange(imgId, { heightCm: h, widthCm: w });
     }
     hInput.addEventListener('input', fire);
     wInput.addEventListener('input', fire);
+
+    imagePanel.querySelector('#fb-img-reset').addEventListener('click', () => {
+      hInput.value = '';
+      wInput.value = '';
+      onImageOverrideChange(imgId, { heightCm: null, widthCm: null });
+    });
 
     imagePanel.querySelector('#fb-img-close').addEventListener('click', clearImagePanel);
   }

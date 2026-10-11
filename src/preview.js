@@ -4,9 +4,12 @@
 
 import { runPagination } from './preview-inject.js';
 import { buildPreviewSidebar } from './preview-sidebar.js';
-import { loadConfig, getConfig, saveConfig, defaultConfig, deepMerge } from './config.js';
+import {
+  loadConfig, getConfig, saveConfig, defaultConfig, deepMerge, resetConfig,
+} from './config.js';
 import { saveCustomFont, readFontFile, fontFamilyString } from './fonts.js';
 import { buildCSS } from './styles.js';
+import { buildPreviewPayload } from './pagination.js';
 import {
   resetOverrides,
   setOverride,
@@ -79,6 +82,17 @@ import {
     const staging = document.getElementById('fb-staging');
     const measure = document.getElementById('fb-measure');
     if (!output || !staging || !measure) return;
+
+    // ★ 重建 blocksHTML：paginationMode 等设置会影响 block 结构，
+    //   必须用最新 config 重新解析，否则 data-sliceable 等属性是旧的
+    if (payload.jsonData) {
+      try {
+        const np = buildPreviewPayload(payload.jsonData, { config });
+        payload.blocksHTML = np.blocksHTML;
+      } catch (e) {
+        console.error('[fenbi-pdf] 重建 blocksHTML 失败：', e);
+      }
+    }
 
     // ★ 同步测量容器的宽度和字体样式
     syncMeasureStyle();
@@ -187,6 +201,14 @@ import {
         rerender();
       };
       inp.click();
+    },
+    onReset: async () => {
+      if (!window.confirm(
+        '恢复默认将清空当前所有排版设置（A4 和 B5 两套），回到插件内置的默认值。\n\n确定要继续吗？'
+      )) return;
+      await resetConfig();
+      sidebar.rebuildPageForm();
+      rerender();
     },
     onImageOverrideChange: debounce((imgId, dims) => {
       setOverride(imgId, dims);

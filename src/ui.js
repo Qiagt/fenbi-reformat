@@ -2,13 +2,14 @@
 // 悬浮面板 UI（内容脚本侧）
 // ============================================================
 
-import { saveConfig } from './config.js';
+import { saveConfig, resetConfig } from './config.js';
 import { getAllFontOptions, saveCustomFont, readFontFile } from './fonts.js';
 import { extractFromPage } from './extractor.js';
 import {
   buildSettingsFormHTML,
   applyFormValues,
   attachSettingsFormHandlers,
+  SETTINGS_FORM_CSS,
 } from './settings-form.js';
 
 const PANEL_CSS = `
@@ -233,6 +234,9 @@ const PANEL_HTML = `
     </div>
     <div class="fb-tab-content" data-content="settings">
       <div class="fb-settings-scroll" id="fb-settings-scroll"></div>
+      <div class="fb-settings-actions">
+        <button class="fb-mini-btn" id="fb-reset-btn">恢复默认</button>
+      </div>
     </div>
   </div>
 </div>
@@ -242,7 +246,7 @@ export function injectPanel(opts) {
   const { config, onGenerate } = opts;
 
   const styleEl = document.createElement('style');
-  styleEl.textContent = PANEL_CSS;
+  styleEl.textContent = PANEL_CSS + SETTINGS_FORM_CSS;
   document.head.appendChild(styleEl);
 
   const wrap = document.createElement('div');
@@ -352,6 +356,14 @@ export function injectPanel(opts) {
   });
 
   rebuildSettingsForm();
+
+  document.getElementById('fb-reset-btn').addEventListener('click', async () => {
+    if (!window.confirm(
+      '恢复默认将清空当前所有排版设置（A4 和 B5 两套），回到插件内置的默认值。\n\n确定要继续吗？'
+    )) return;
+    await resetConfig();
+    rebuildSettingsForm();
+  });
 
   document.getElementById('fb-generate-btn').addEventListener('click', () => {
     let data;
