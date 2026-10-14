@@ -97,9 +97,12 @@ export function runPagination(deps) {
         lastTop = top;
       });
       if (cur.length > 0) groups.push(cur);
-      if (groups.length <= 1) return;
 
       var blockWrapper = el.closest('.fb-block');
+      var qg = blockWrapper ? blockWrapper.dataset.qgroup : '?';
+      console.log('[explode] qgroup=' + qg, 'opts=' + opts.length, 'groups=' + groups.length);
+
+      if (groups.length <= 1) return;
       if (!blockWrapper) return;
 
       var cs = getComputedStyle(el);
@@ -160,6 +163,8 @@ export function runPagination(deps) {
     }
 
     var textNodes = getAllTextNodes(el);
+    console.log('[findCutPoint] textNodes=' + textNodes.length, 'cutY=' + cutY.toFixed(1), 'effective=' + effective.toFixed(1));
+
     for (var ni = 0; ni < textNodes.length; ni++) {
       var node = textNodes[ni];
       var text = node.data;
@@ -172,6 +177,8 @@ export function runPagination(deps) {
       for (var r = 0; r < nrects.length; r++) {
         if (nrects[r].bottom > effective) { exceeds = true; break; }
       }
+      console.log('  node[' + ni + '] rects=' + nrects.length, 'exceeds=' + exceeds, 'text="' + text.slice(0, 20) + '"');
+
       if (!exceeds) continue;
 
       for (var i = 0; i < text.length; i++) {
@@ -181,11 +188,14 @@ export function runPagination(deps) {
         var crects = cr.getClientRects();
         if (crects.length === 0) continue;
         if (crects[0].bottom > effective) {
+          console.log('  -> cut at node[' + ni + '] offset=' + i);
           return { node: node, offset: i };
         }
       }
+      console.log('  -> cut at node[' + ni + '] end');
       return { node: node, offset: text.length };
     }
+    console.log('  -> findCutPoint returns null');
     return null;
   }
 
@@ -293,8 +303,8 @@ export function runPagination(deps) {
       }
     })();
 
-    var blockEls = Array.from(measure.children).filter(function (el) {
-      return el.classList && el.classList.contains('fb-block');
+    var blockEls = Array.from(measure.querySelectorAll('.fb-block')).filter(function (el) {
+      return el.parentElement === measure;
     });
 
     var footerH_px = measureFooterHeight(BODY_FF, '10.5pt');
@@ -462,8 +472,21 @@ export function runPagination(deps) {
 
       if (rect.bottom <= cb) continue;
 
+      console.log('[paginate] 放不下 qgroup=' + unit.meta.qGroup,
+                  'sliceable=' + unit.meta.sliceable,
+                  'rect.bottom=' + rect.bottom.toFixed(1),
+                  'cb=' + cb.toFixed(1));
+
       if (unit.meta.sliceable) {
         var cut = findCutPoint(clone, cb);
+        console.log('[paginate] findCutPoint 返回：', cut ? ('offset=' + cut.offset) : 'null');
+
+        // ★ 新增：切点为空 = 文字内容实际都放得下（超出的只是行盒下行空间），留页
+        if (cut === null && clone.textContent.trim().length > 0) {
+          console.log('[paginate] 内容实际放得下，留当前页');
+          continue;
+        }
+
         if (cut) {
           markCutPoint(clone, cut);
 
@@ -476,6 +499,7 @@ export function runPagination(deps) {
           var qnumText = qnumEl ? qnumEl.textContent : '';
           var realText = head.textContent.replace(qnumText, '').trim();
           var headHasContent = realText.length > 0 || head.querySelector('img');
+          console.log('[paginate] headHasContent=' + headHasContent, 'head 文本="' + realText.slice(0, 30) + '"');
 
           if (headHasContent) {
             curPage.content.replaceChild(head, clone);

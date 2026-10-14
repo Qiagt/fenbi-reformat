@@ -19,7 +19,7 @@ export function buildCSS(settings, pageSize, pageSizes) {
   const sealLineX = lineXMm - settings.marginLeft;
   const sealTextX = sealTextXMm - settings.marginLeft;
   const sealNameY = sealNameYMm - settings.marginTop;
-  const sealIdY   = sealIdYMm - settings.marginTop;
+  const sealIdY   = sealIdYMm - settings.margibnTop;
 
   const coverShiftMm = ((lineXMm - settings.marginLeft) / 2).toFixed(2);
 
@@ -242,11 +242,13 @@ img.fb-img-inline[data-img-context="material"] {
   margin: 0 2px;
 }
 .fb-blank {
-  text-decoration: underline;
-  text-underline-offset: auto;
-  text-decoration-skip-ink: none;
+  display: inline;
   white-space: pre;
   margin: 0;
+  background-image: linear-gradient(to right, currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 calc(100% - 0.15ex);
 }
 
 img.fb-img-selected {
